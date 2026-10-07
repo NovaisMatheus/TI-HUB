@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import { ErrorFilter } from './common/error.filter';
+import { allowedOrigins } from './common/origins';
 import type { Request, Response, NextFunction } from 'express';
 config({ path: resolve(process.cwd(), '../../.env'), quiet: true });
 config({ quiet: true });
@@ -37,7 +38,7 @@ async function bootstrap() {
     next();
   });
   app.use(cookieParser());
-  app.enableCors({ origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173', credentials: true });
+  app.enableCors({ origin: allowedOrigins(), credentials: true });
   app.use(
     '/api/auth/login',
     rateLimit({ windowMs: 15 * 60 * 1000, limit: 15, standardHeaders: true, legacyHeaders: false }),
@@ -48,7 +49,7 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new ErrorFilter());
   app.enableShutdownHooks();
-  await app.listen(Number(process.env.PORT ?? 3001), '0.0.0.0');
+  await app.listen(Number(process.env.PORT ?? 3001), process.env.API_HOST ?? '127.0.0.1');
   console.log(
     JSON.stringify({ level: 'info', event: 'api_ready', port: Number(process.env.PORT ?? 3001) }),
   );

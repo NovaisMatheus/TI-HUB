@@ -15,6 +15,20 @@ export function ExtensionSettings() {
   return (
     <section className="detail-section">
       <h2>Extensão Chrome · Coletor 1Doc</h2>
+      <a
+        className="button button-outline"
+        href="/downloads/ugb-ti-hub-1doc.zip"
+        download="ugb-ti-hub-1doc.zip"
+      >
+        Baixar extensão Chrome
+      </a>
+      <p>
+        Extraia o ZIP, abra <code>chrome://extensions</code>, ative o Modo do desenvolvedor e clique
+        em Carregar sem compactação. Selecione a pasta extraída.
+      </p>
+      <p>
+        Endereço para configurar na extensão: <strong>{window.location.origin}</strong>
+      </p>
       <p>
         Na extensão, informe o endereço deste Hub e uma chave gerada abaixo. A chave vale por 30
         dias e permite verificar a conexão, localizar o documento e salvar ou atualizar demandas.

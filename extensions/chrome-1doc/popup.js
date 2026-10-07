@@ -1,3 +1,4 @@
+import { hubOrigin } from './hub-url.js';
 const get = (id) => document.getElementById(id);
 let captured;
 const status = (message) => {
@@ -14,20 +15,9 @@ if (saved.lastResult) {
 get('settings').addEventListener('submit', async (event) => {
   event.preventDefault();
   try {
-    const url = new URL(get('hubUrl').value);
-    if (
-      url.username ||
-      url.password ||
-      (url.protocol !== 'https:' &&
-        !(url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)))
-    )
-      throw new Error('Use HTTPS ou o endereço local do Hub.');
-    const hubUrl = url.origin;
+    const hubUrl = hubOrigin(get('hubUrl').value);
     const token = get('token').value.trim();
-    if (
-      url.protocol === 'https:' &&
-      !(await chrome.permissions.request({ origins: [`${url.origin}/*`] }))
-    )
+    if (!(await chrome.permissions.request({ origins: [`${hubUrl}/*`] })))
       throw new Error('Acesso ao Hub não autorizado.');
     const response = await fetch(`${hubUrl}/api/extension/session`, {
       credentials: 'omit',

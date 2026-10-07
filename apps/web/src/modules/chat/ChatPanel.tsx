@@ -4,6 +4,7 @@ import { MessageSquare, X, Send, RefreshCw } from 'lucide-react';
 import { Button } from '@hub/ui';
 import type { SessionUser } from '@hub/types';
 import { api, send } from '../../services/api';
+import { requestId } from '../../services/request-id';
 interface Message {
   id?: string;
   name?: string;
@@ -96,7 +97,7 @@ export function ChatPanel({
     setNotice('');
     const sentText = draft;
     if (pending.current?.text !== sentText || pending.current.target !== target)
-      pending.current = { text: sentText, target, id: crypto.randomUUID() };
+      pending.current = { text: sentText, target, id: requestId() };
     try {
       await send(target, { text: sentText, requestId: pending.current.id });
       setDrafts((values) => ({ ...values, [target]: '' }));

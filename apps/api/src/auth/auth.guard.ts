@@ -13,6 +13,7 @@ import type { SessionUser } from '@hub/types';
 import { AuthService } from './auth.service';
 import { createHash } from 'node:crypto';
 import { PrismaService } from '../common/prisma.service';
+import { originAllowed } from '../common/origins';
 export interface AuthRequest extends Request {
   user: SessionUser;
 }
@@ -74,7 +75,7 @@ export class AuthGuard implements CanActivate {
       request.method !== 'GET' &&
       !extensionToken &&
       request.headers.origin &&
-      request.headers.origin !== process.env.CORS_ORIGIN
+      !originAllowed(request.headers.origin)
     )
       throw new ForbiddenException('Origem não permitida.');
     const key = this.reflector.getAllAndOverride<string>('permission', [

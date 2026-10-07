@@ -56,6 +56,16 @@ export class ChatController {
     @Req() req: AuthRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
+    if (
+      req.headers.origin &&
+      req.headers.origin !==
+        new URL(
+          process.env.GOOGLE_CHAT_REDIRECT_URI ?? 'http://localhost:5173/api/chat/google/callback',
+        ).origin
+    )
+      throw new BadRequestException(
+        'A autorização Google está configurada para outro endereço. Conecte sua conta no computador do Hub pelo endereço configurado ou solicite ao administrador um domínio HTTPS com OAuth para acesso pela rede. Contas já conectadas podem usar o chat pela rede.',
+      );
     const { state, url } = await this.google.start(req.user.id);
     res.cookie('hub_google_state', state, {
       httpOnly: true,
@@ -85,7 +95,7 @@ export class ChatController {
     }
     res.clearCookie('hub_google_state', { path: '/api/chat/google/callback' });
     res.redirect(
-      `${process.env.CORS_ORIGIN ?? 'http://localhost:5173'}/?chat=${success ? 'google-connected' : 'google-error'}`,
+      `${new URL(process.env.GOOGLE_CHAT_REDIRECT_URI ?? 'http://localhost:5173/api/chat/google/callback').origin}/?chat=${success ? 'google-connected' : 'google-error'}`,
     );
   }
   @Permission('chat.read') @Delete('google/connection') disconnect(@Req() req: AuthRequest) {

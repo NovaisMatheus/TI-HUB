@@ -3,8 +3,9 @@
   "private": true,
   "packageManager": "pnpm@11.19.0",
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,green \"pnpm --filter @hub/api dev\" \"pnpm --filter @hub/web dev\"",
-    "build": "pnpm -r build",
+    "dev": "pnpm extension:package && concurrently -n api,web -c blue,green \"pnpm --filter @hub/api dev\" \"pnpm --filter @hub/web dev\"",
+    "build": "pnpm extension:package && pnpm -r build",
+    "extension:package": "node scripts/package-extension.mjs",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint apps packages scripts tests extensions",
     "format": "prettier --write .",

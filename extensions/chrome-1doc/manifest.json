@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "UGB TI Hub · Coletor 1Doc",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "content_scripts": [
     {
       "matches": ["https://*.1doc.com.br/*"],
@@ -12,7 +12,7 @@
   "description": "Coleta um documento e seus despachos no 1Doc e abre uma demanda no TI Hub.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
-  "optional_host_permissions": ["https://*/*"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "action": { "default_popup": "popup.html", "default_title": "Coletar para TI Hub" },
   "background": { "service_worker": "background.js", "type": "module" }
 }

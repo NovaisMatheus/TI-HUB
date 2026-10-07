@@ -2,7 +2,7 @@ FROM node:24-bookworm-slim AS build
 RUN corepack enable
 WORKDIR /app
 COPY . .
-RUN pnpm install --frozen-lockfile && pnpm --filter @hub/web build
+RUN pnpm install --frozen-lockfile && pnpm extension:package && pnpm --filter @hub/web build
 FROM nginx:1.28-alpine
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html

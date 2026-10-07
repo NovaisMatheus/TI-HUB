@@ -17,12 +17,13 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://hub:${POSTGRES_PASSWORD:-hub_dev_only}@postgres:5432/ugb_hub?schema=public
+      API_HOST: 0.0.0.0
     ports: ['127.0.0.1:3001:3001']
     depends_on:
       postgres: { condition: service_healthy }
   web:
     build: { context: ., dockerfile: apps/web/Dockerfile }
-    ports: ['127.0.0.1:5173:80']
+    ports: ['${HUB_BIND_ADDRESS:-127.0.0.1}:5173:80']
     depends_on: [api]
 volumes:
   postgres_data:

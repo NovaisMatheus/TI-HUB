@@ -53,6 +53,18 @@ O snapshot contém os registros escalares dos modelos Prisma, incluindo senhas e
 
 Para uso institucional, disponibilize as ferramentas PostgreSQL de backup/restauração, estabeleça dumps regulares ou política equivalente administrada pelo banco e ensaie a restauração em outro ambiente. Faça backup separado e protegido de configurações/chave GOOGLE_CHAT_ENCRYPTION_KEY; tokens criptografados não podem ser recuperados sem ela. Defina retenção, acesso e responsável antes de produção.
 
+## Acesso pela rede local
+
+Nesta instalação, o endereço é **http://192.168.10.9:5173**. Os demais computadores precisam alcançar esse IP na rede 192.168.0.0/16. Mantenha o computador servidor, o PostgreSQL e `pnpm dev` em execução. O endereço deve permanecer reservado para esse computador.
+
+O frontend atende a rede; API e PostgreSQL permanecem em loopback. O proxy do frontend encaminha `/api`. A configuração `CORS_ORIGINS` inclui o endereço da rede e valida também a origem das alterações autenticadas por cookie.
+
+O script `scripts/configurar-rede-local.ps1`, executado como administrador do Windows, libera somente TCP 5173 no endereço 192.168.10.9 para a rede 192.168.0.0/16. Ele salva o resultado em `.local/rede-local-status.json`. Se outro computador não alcançar o Hub, confira a regra e o roteamento da rede.
+
+Em **Meu perfil**, use **Baixar extensão Chrome**, extraia o ZIP, abra `chrome://extensions`, ative Modo do desenvolvedor e escolha **Carregar sem compactação**, selecionando a pasta extraída. Configure a extensão com `http://192.168.10.9:5173` e sua própria credencial. Aceite a permissão para esse endereço quando o Chrome solicitar. A coleta continua disponível pelo botão flutuante no 1Doc.
+
+Uma conexão Google Chat já autorizada pode ser utilizada no Hub pela rede. Para autorizar uma nova conexão, a configuração OAuth atual ainda usa o navegador do servidor em `http://localhost:5173`. Autorizações em outros computadores exigem um domínio HTTPS configurado no Google Cloud; trocar o callback para um IP privado HTTP não resolve. O Hub mostra essa orientação antes de iniciar uma autorização pelo endereço da rede.
+
 ## Diagnóstico habitual
 
 | Sintoma                           | Verificação                                                                                                              |
