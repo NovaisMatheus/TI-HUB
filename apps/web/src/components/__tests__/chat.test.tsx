@@ -25,6 +25,22 @@ function mount() {
     </QueryClientProvider>,
   );
 }
+it('orienta sobre o endereço OAuth antes de iniciar uma conexão por outra origem', async () => {
+  vi.mocked(api).mockImplementation(async (path) =>
+    path.includes('status')
+      ? ({
+          configured: true,
+          connected: false,
+          authorizationOrigin: 'http://localhost:5173',
+        } as never)
+      : ({ items: [] } as never),
+  );
+  mount();
+  await userEvent.click(screen.getByRole('button', { name: 'Google Chat' }));
+  await screen.findByText(/Localhost só funciona no próprio servidor/);
+  expect(screen.queryByRole('button', { name: 'Conectar Google Chat' })).toBeNull();
+  expect(send).not.toHaveBeenCalled();
+});
 it('envia mensagem da equipe e mostra configuração pendente sem simular conexão Google', async () => {
   vi.mocked(api).mockImplementation(async (path) =>
     path.includes('status')

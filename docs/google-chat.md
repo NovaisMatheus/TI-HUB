@@ -22,6 +22,20 @@ GOOGLE_CHAT_ENCRYPTION_KEY=chave-aleatoria-de-32-bytes-em-64-caracteres-hexadeci
 
 5. Reinicie a API. No painel à direita, abra **Google Chat → Conectar Google Chat**, escolha a conta e autorize os três escopos. Depois selecione o espaço para conversar.
 
+### Autorizar a conta a partir de outros computadores
+
+O Hub está acessível pela rede em `http://192.168.10.9:5173`, mas o callback OAuth atualmente está configurado em `http://localhost:5173/api/chat/google/callback`. Na outra máquina, localhost é a própria máquina, não o servidor. O Google não aceita substituir esse callback por um IP privado HTTP: para um cliente Web, exige HTTPS e um nome de domínio, com exceção de localhost para desenvolvimento. Consulte as [regras oficiais de validação do retorno OAuth](https://developers.google.com/identity/protocols/oauth2/web-server#redirect-uri-validation).
+
+Para permitir novas autorizações em todos os computadores:
+
+1. Defina um nome sob um domínio administrado pela organização e configure o DNS usado pelos clientes para apontá-lo para `192.168.10.9`. O servidor pode continuar restrito à rede interna.
+2. Disponibilize HTTPS para esse nome, com certificado confiável nos computadores, encaminhando o frontend e `/api` para os serviços do Hub.
+3. No cliente OAuth Web do Google Cloud, cadastre exatamente `https://DOMINIO_DO_HUB/api/chat/google/callback` como URI de redirecionamento autorizado. Não use literalmente o exemplo `DOMINIO_DO_HUB`.
+4. Atualize `CORS_ORIGIN=https://DOMINIO_DO_HUB` e `GOOGLE_CHAT_REDIRECT_URI=https://DOMINIO_DO_HUB/api/chat/google/callback` no `.env`. Preserve os segredos e a chave de criptografia existentes. Reinicie a API e acesse o Hub pelo domínio HTTPS em todos os computadores para iniciar a autorização.
+5. Valide o login do Hub e o consentimento Google em outra máquina. Contas já autorizadas continuam vinculadas ao mesmo usuário do Hub.
+
+O chat identifica a diferença entre o endereço acessado e o endereço de autorização antes de iniciar OAuth. O domínio, o certificado e o cadastro no Google Cloud ainda precisam ser definidos para concluir essa configuração nesta instalação.
+
 ### Leitura funciona, mas o envio falha
 
 Habilitar a API e criar OAuth é suficiente para leitura. Para criar mensagens, configure também o aplicativo no **mesmo projeto do cliente OAuth**, em **Google Chat API → Configuração**: nome do aplicativo, URL HTTPS de uma imagem quadrada PNG/JPEG e descrição. Para a integração atual do Hub, os recursos interativos podem permanecer desativados. Salve a configuração. Consulte a [configuração oficial do Google Chat](https://developers.google.com/workspace/chat/configure-chat-api).

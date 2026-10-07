@@ -51,7 +51,10 @@ export function ChatPanel({
   const draft = drafts[target] ?? '';
   const status = useQuery({
     queryKey: ['chat-google-status', user.id],
-    queryFn: () => api<{ configured: boolean; connected: boolean }>('chat/google/status'),
+    queryFn: () =>
+      api<{ configured: boolean; connected: boolean; authorizationOrigin?: string | null }>(
+        'chat/google/status',
+      ),
     enabled: open,
     retry: false,
   });
@@ -168,6 +171,16 @@ export function ChatPanel({
             <p>
               Google Chat aguarda configuração do administrador. A conversa da Equipe Hub já está
               disponível.
+            </p>
+          ) : !status.data.connected &&
+            status.data.authorizationOrigin &&
+            status.data.authorizationOrigin !== location.origin ? (
+            <p role="status">
+              A autorização Google está configurada para{' '}
+              <strong>{status.data.authorizationOrigin}</strong>. Abra o Hub nesse endereço para
+              conectar sua conta. Localhost só funciona no próprio servidor; para autorizar de
+              outras máquinas, é necessário configurar um domínio HTTPS e o retorno OAuth do Google
+              Cloud. Contas já conectadas podem usar o chat pela rede.
             </p>
           ) : !status.data.connected ? (
             <>

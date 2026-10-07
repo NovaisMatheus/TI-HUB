@@ -50,6 +50,9 @@ export class GoogleChatService {
   async status(userId: string) {
     return {
       configured: this.configured(),
+      authorizationOrigin: this.configured()
+        ? new URL(process.env.GOOGLE_CHAT_REDIRECT_URI!).origin
+        : null,
       connected: !!(await this.db.googleChatConnection.findUnique({
         where: { userId },
         select: { id: true },
