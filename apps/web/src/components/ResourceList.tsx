@@ -42,13 +42,20 @@ export function ResourceList({
         title={config.label}
         description="Informação organizada. Histórico preservado. Decisões pela equipe."
         actions={
-          canWrite && (
+          canWrite &&
+          name !== 'demands' && (
             <Button onClick={() => setCreate(true)}>
               <Plus size={16} /> Novo registro
             </Button>
           )
         }
       />
+      {name === 'demands' && (
+        <p className="notice">
+          Use a extensão Chrome para coletar um documento do 1Doc. O tipo original e os despachos
+          são preservados. Configure a conexão em <Link to="/profile">Meu perfil</Link>.
+        </p>
+      )}
       <div className="collection-tabs">
         {name === 'equipment' ? (
           <>

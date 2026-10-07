@@ -19,6 +19,7 @@ async function seed() {
     'inspection',
     'documents',
     'systems',
+    'demands',
   ];
   const keys = [
     ...scopes.flatMap((s) => [s + '.read', s + '.write']),

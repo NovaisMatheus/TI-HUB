@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Coletar para TI Hub</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <span>UGB</span>
+      <h1>TI Hub <small>Coletor 1Doc</small></h1>
+    </header>
+    <p>Abra o documento e carregue os despachos que deseja importar.</p>
+    <button id="collect" type="button">Coletar e abrir demanda</button>
+    <p id="status" role="status" aria-live="polite"></p>
+    <a id="last" hidden target="_blank" rel="noopener">Abrir última demanda</a>
+    <details id="config">
+      <summary>Conexão com o Hub</summary>
+      <form id="settings">
+        <label
+          >Endereço do TI Hub<input
+            id="hubUrl"
+            type="url"
+            required
+            placeholder="http://localhost:5173"
+        /></label>
+        <label
+          >Chave da extensão<input
+            id="token"
+            type="password"
+            required
+            autocomplete="off"
+            placeholder="Gerada em Meu perfil"
+        /></label>
+        <button type="submit">Salvar e verificar conexão</button
+        ><button id="disconnect" type="button" class="secondary">Desconectar</button>
+      </form>
+      <p>A chave pode ser revogada no seu perfil do Hub.</p>
+    </details>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

@@ -16,6 +16,7 @@ import {
   ChevronDown,
   LogOut,
   Network,
+  Inbox,
 } from 'lucide-react';
 import { Button } from '@hub/ui';
 import type { SessionUser } from '@hub/types';
@@ -24,6 +25,7 @@ import { ThemeControl } from '../components/ThemeControl';
 import { send } from '../services/api';
 const navigation = [
   { path: '/', label: 'Início', icon: Home },
+  { path: '/demands', label: 'Demandas', icon: Inbox },
   { path: '/maintenance', label: 'Suporte', icon: Wrench },
   { path: '/equipment', label: 'Equipamentos', icon: Monitor },
   { path: '/knowledge', label: 'Conhecimento', icon: BookOpen },
@@ -82,7 +84,9 @@ export function Workspace({
           {navigation
             .filter(
               (item) =>
-                item.path !== '/administration' || user.permissions.includes('admin.audit.read'),
+                (item.path !== '/administration' ||
+                  user.permissions.includes('admin.audit.read')) &&
+                (item.path !== '/demands' || user.permissions.includes('demands.read')),
             )
             .map((item) => (
               <NavLink

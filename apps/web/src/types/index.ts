@@ -46,6 +46,9 @@ export function display(value: unknown): string {
   return String(value);
 }
 export const labels: Record<string, string> = {
+  documentType: 'Tipo no 1Doc',
+  requester: 'Solicitante',
+  sourceStatus: 'Situação no 1Doc',
   hostname: 'Equipamento',
   assetTag: 'Patrimônio',
   assignedUser: 'Usuário',

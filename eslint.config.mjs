@@ -15,6 +15,19 @@ export default ts.config(
     },
   },
   {
+    files: ['extensions/**/*.js'],
+    languageOptions: {
+      globals: {
+        chrome: 'readonly',
+        document: 'readonly',
+        location: 'readonly',
+        URL: 'readonly',
+        fetch: 'readonly',
+        AbortSignal: 'readonly',
+      },
+    },
+  },
+  {
     files: ['**/*.mjs'],
     languageOptions: {
       globals: {

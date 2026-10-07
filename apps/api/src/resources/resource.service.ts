@@ -145,6 +145,8 @@ export class ResourceService {
     return { ...item, documents, ...related };
   }
   async save(name: string, id: string | undefined, input: unknown, user: SessionUser, ip?: string) {
+    if (name === 'demands' && !id)
+      throw new BadRequestException('Use a extensão para coletar uma demanda do 1Doc.');
     const config = this.config(name, user, true);
     if (id && config.immutable)
       throw new BadRequestException('Use as ações de avaliação deste registro.');

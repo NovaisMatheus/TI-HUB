@@ -45,6 +45,9 @@ export class SearchService {
               some: { content: { contains: t, mode: 'insensitive' } },
             },
           });
+      if (name === 'demands')
+        for (const token of tokens)
+          OR.push({ dispatches: { some: { content: { contains: token, mode: 'insensitive' } } } });
       if (name === 'specifications')
         for (const t of tokens)
           OR.push({
@@ -90,6 +93,7 @@ export class SearchService {
           'acquisitions',
           'analyses',
           'documents',
+          'demands',
         ].includes(name)
           ? { dataPolicy: { not: 'NO_AI' } }
           : {};

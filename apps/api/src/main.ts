@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { config } from 'dotenv';
 import { resolve } from 'node:path';
 import { NestFactory } from '@nestjs/core';
+import { json as expressJson } from 'express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
@@ -13,7 +14,9 @@ async function bootstrap() {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)
     throw new Error('Configure JWT_SECRET com pelo menos 32 caracteres.');
   const { AppModule } = await import('./app.module');
-  const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'] });
+  const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'], bodyParser: false });
+  app.use('/api/imports/1doc', expressJson({ limit: '5mb' }));
+  app.use(expressJson());
   app.setGlobalPrefix('api');
   app.use(helmet());
   app.use((request: Request, response: Response, next: NextFunction) => {

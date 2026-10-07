@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Badge } from '@hub/ui';
 import { api, send } from '../../services/api';
 import { display, object, type Entity } from '../../types';
-import type { Page } from '@hub/types';
+import type { Page, SessionUser } from '@hub/types';
+import { ExtensionSettings } from '../demands/ExtensionSettings';
 import { PageHeader, State } from '../../components/PageHeader';
 export function Administration() {
   const [page, setPage] = useState(1),
@@ -105,7 +106,7 @@ export function Administration() {
     </>
   );
 }
-export function Profile() {
+export function Profile({ user }: { user: SessionUser }) {
   const client = useQueryClient();
   const [message, setMessage] = useState('');
   const profile = useQuery({ queryKey: ['profile'], queryFn: () => api<Entity>('profile') });
@@ -115,6 +116,7 @@ export function Profile() {
         title="Meu perfil"
         description="Preferências pessoais e configuração do assistente."
       />
+      {user.permissions.includes('demands.write') && <ExtensionSettings />}
       <section className="detail-section">
         <h2>Inteligência artificial</h2>
         <p>Provider atual: mock · modelo de recuperação de registros.</p>

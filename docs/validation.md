@@ -33,3 +33,14 @@ O tema usa botões Claro/Escuro/Sistema, aplica a seleção imediatamente, acomp
 - TypeScript, ESLint, build e auditoria de dependências de produção: aprovados.
 
 A ferramenta de navegador rejeitou a navegação nesta revisão por política automática. Assim, a verificação visual anterior não confirma o layout alterado; os novos controles foram verificados por código, DOM simulado e HTTP, sem contornar o bloqueio. Providers externos e funções futuras indicadas no README continuam fora desta validação.
+
+## Demandas e extensão Chrome 1Doc
+
+- Migration aplicada ao PostgreSQL local e Prisma Client regenerado. Banco atualizado; roles Administrador/Técnico recebem escrita e Consulta somente leitura.
+- HTML anexado analisado sem executar scripts: Chamado técnico 2.852/2026, assunto NovoServ - Usuários, dois campos adicionais e um despacho. Não foi importado no banco; testes usam fixture anonimizada.
+- Vitest: 27 testes aprovados, incluindo extração de múltiplos despachos, Circular/Chamado técnico, metadados, campos, anexos, limpeza de tokens/rascunhos, conteúdo parcial, validação de links, service worker com API Chrome simulada e exibição/edição de demanda em DOM simulado.
+- `pnpm test:1doc`: importação acima de 100 KB, criação, atualização sem duplicação, retenção de despachos/conteúdo/anexos em captura parcial, observações internas, busca por conteúdo de despacho, bloqueio de consulta, chave restrita a endpoints de extensão e revogação, com API e PostgreSQL reais.
+- `pnpm test:interface`: 18 módulos listados, detalhados e filtrados; `pnpm test:chain`: cadeia de aquisição aprovada novamente.
+- TypeScript, ESLint, build e auditoria de produção aprovados.
+
+O Chrome instalado e uma sessão autenticada real do 1Doc não foram controlados ou testados nesta etapa. A extensão é entregue para instalação local, sem publicação na Web Store. O coletor suporta a estrutura interna do exemplo; conteúdo não carregado e outros layouts precisam de validação em uso real. A captura de anexos preserva links/metadados, não os arquivos binários.

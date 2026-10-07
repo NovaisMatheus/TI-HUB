@@ -11,11 +11,12 @@ import { WorkflowService } from './acquisitions/workflow.service';
 import { SearchService } from './search/search.service';
 import { RecordHooks } from './resources/record-hooks';
 import { ConnectionService } from './equipment/connection.service';
+import { DemandController } from './demands/demand.controller';
 @Module({
   imports: [
     JwtModule.register({ secret: process.env.JWT_SECRET, signOptions: { expiresIn: '8h' } }),
   ],
-  controllers: [AuthController, ResourceController],
+  controllers: [AuthController, ResourceController, DemandController],
   providers: [
     PrismaService,
     AuthService,

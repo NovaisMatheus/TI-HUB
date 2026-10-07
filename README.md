@@ -2,6 +2,8 @@
 
 Workspace técnico interno para centralizar equipamentos, intervenções, conhecimento e a cadeia técnica de aquisições de uma prefeitura. Primeira fundação executável, com frontend e API separados, persistência PostgreSQL, permissões e trilha de auditoria. Os dados iniciais são fictícios.
 
+A [extensão Chrome para 1Doc](docs/chrome-1doc.md) coleta documentos e despachos ao clicar em Coletar, criando ou atualizando registros no módulo Demandas. Instalação e conexão estão descritas no guia.
+
 ## Execução local
 
 Requisitos: Node.js 24, pnpm 11.19 e PostgreSQL 17/18 ou Docker Compose. A versão de pnpm está fixada em `package.json`. Instale com `corepack enable` ou use uma instalação compatível de pnpm.
@@ -88,6 +90,7 @@ pnpm test
 pnpm test:smoke
 pnpm test:chain
 pnpm test:interface
+pnpm test:1doc
 ```
 
 Os smoke tests criam registros fictícios, versões e eventos de auditoria no banco de desenvolvimento. O teste de cadeia cria um processo completo. Execute apenas em uma base descartável de desenvolvimento. Testes unitários não dependem do banco.

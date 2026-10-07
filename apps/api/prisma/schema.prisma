@@ -34,6 +34,69 @@ model User {
   aIConfiguration_user               AIConfiguration?          @relation("AIConfiguration_user")
   aIConversation_user                AIConversation[]          @relation("AIConversation_user")
   auditLog_user                      AuditLog[]                @relation("AuditLog_user")
+  extensionCredentials               ExtensionCredential[]
+}
+
+model ExtensionCredential {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  @@index([userId])
+}
+
+model Demand {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  sourceHost   String
+  sourceId     String
+  sourceUrl    String
+  number       String
+  documentType String
+  title        String
+  description  String
+  requester    String
+  sourceStatus String
+  status       String   @default("ABERTA")
+  notes        String   @default("")
+  dataPolicy   String   @default("NO_AI")
+  capturedAt   DateTime
+  metadata     Json
+  dispatches   DemandDispatch[]
+  snapshots    DemandSnapshot[]
+  @@unique([sourceHost, sourceId])
+  @@index([status])
+}
+
+model DemandDispatch {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  demandId   String
+  demand     Demand   @relation(fields: [demandId], references: [id])
+  sourceId   String
+  sequence   Int
+  title      String
+  author     String
+  dateLabel  String
+  content    String
+  metadata   Json
+  @@unique([demandId, sourceId])
+}
+
+model DemandSnapshot {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  demandId   String
+  demand     Demand   @relation(fields: [demandId], references: [id])
+  capturedBy String
+  capturedAt DateTime
+  payload    Json
+  @@index([demandId])
 }
 
 model Role {

@@ -43,6 +43,20 @@ export const equipmentStatuses = [
   'BAIXADO',
 ];
 export const catalog: Record<string, Resource> = {
+  demands: {
+    model: 'demand',
+    label: 'Demandas',
+    singular: 'Demanda',
+    permission: 'demands',
+    title: 'title',
+    search: ['title', 'number', 'documentType', 'description', 'requester', 'sourceStatus'],
+    columns: ['number', 'documentType', 'title', 'requester', 'status', 'sourceStatus'],
+    fields: [
+      select('status', 'Situação no Hub', ['ABERTA', 'EM_ANDAMENTO', 'AGUARDANDO', 'CONCLUIDA']),
+      text('notes', 'Observações internas', true),
+    ],
+    include: { dispatches: { orderBy: { sequence: 'asc' } } },
+  },
   departments: {
     model: 'department',
     label: 'Setores',
@@ -392,6 +406,7 @@ export const catalog: Record<string, Resource> = {
       f('mimeType', 'Tipo MIME'),
       text('description', 'Descrição'),
       select('entityType', 'Tipo de vínculo', [
+        'demands',
         'equipment',
         'maintenance',
         'knowledge',

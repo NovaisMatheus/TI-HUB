@@ -1,5 +1,34 @@
 @import 'tailwindcss';
 
+.captured-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.demand-form label,
+.extension-key {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+.demand-form textarea,
+.demand-form select,
+.extension-key input {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 6px;
+}
+.extension-key-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
 :root {
   font-family: Inter, system-ui, sans-serif;
   color: var(--foreground);

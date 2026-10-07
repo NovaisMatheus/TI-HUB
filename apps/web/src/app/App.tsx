@@ -12,8 +12,11 @@ import { Administration, Profile, Tools } from '../modules/administration/Admini
 import { ResourceList } from '../components/ResourceList';
 import { EntityDetail } from '../components/EntityDetail';
 import { State } from '../components/PageHeader';
+import { DemandDetail } from '../modules/demands/DemandDetail';
 function ResourceRoute({ catalog, user }: { catalog: Catalog; user: SessionUser }) {
   const { name = '', id } = useParams();
+  if (name === 'demands' && id && catalog.demands)
+    return <DemandDetail key={id} id={id} user={user} />;
   return id ? (
     <EntityDetail key={`${name}/${id}`} name={name} id={id} catalog={catalog} user={user} />
   ) : (
@@ -70,7 +73,7 @@ export function App() {
         <Route index element={<Dashboard user={user} onSearch={() => setSearch(true)} />} />
         <Route path="assistant" element={<Assistant />} />
         <Route path="administration" element={<Administration />} />
-        <Route path="profile" element={<Profile />} />
+        <Route path="profile" element={<Profile user={user} />} />
         <Route path="tools" element={<Tools />} />
         <Route path=":name" element={<ResourceRoute catalog={catalog.data ?? {}} user={user} />} />
         <Route
