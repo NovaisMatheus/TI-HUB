@@ -23,7 +23,7 @@ pnpm dev
 
 Sem Docker, execute `pnpm db:local` em um terminal e mantenha-o aberto. É PostgreSQL real, restrito ao loopback, com dados persistidos em `.local/postgres`. Use a mesma `DATABASE_URL` de `.env.example`. Esta alternativa é apenas para desenvolvimento.
 
-Abra [http://localhost:5173](http://localhost:5173). A API fica em `http://localhost:3001/api`. O Vite encaminha `/api` para o NestJS; o navegador não acessa o banco.
+Nesta instalação, use [HTTPS do TI Hub](https://ti-hub.192-168-10-9.sslip.io), após configurar a confiança no PC pelo [guia HTTPS](docs/https-rede-local.md). O acesso HTTP à rede continua em [http://192.168.10.9:5173](http://192.168.10.9:5173). Localhost serve para acesso no próprio servidor. A API fica em loopback e `/api` é encaminhado pelo frontend; o navegador não acessa o banco.
 
 Para uma base nova, preencha BOOTSTRAP_NAME, BOOTSTRAP_EMAIL, BOOTSTRAP_USERNAME e BOOTSTRAP_PASSWORD no arquivo .env antes de executar pnpm db:seed. A senha precisa de pelo menos 12 caracteres e no máximo 72 bytes. Se já existir administrador ativo, suas contas e senhas são preservadas. Remova BOOTSTRAP_PASSWORD após o primeiro cadastro. Entre por usuário ou e-mail.
 
@@ -38,7 +38,7 @@ docker compose up -d --build
 docker compose exec api pnpm db:seed
 ```
 
-O container da API aplica migrations antes de iniciar. O seed é explícito. Os serviços são expostos apenas no loopback; PostgreSQL possui volume persistente. O frontend é servido por Nginx com fallback de rotas e proxy da API. O Compose não é uma configuração completa de produção.
+O container da API aplica migrations antes de iniciar. O seed é explícito. API e PostgreSQL são expostos apenas no loopback; o endereço do frontend é controlado por `HUB_BIND_ADDRESS` e PostgreSQL possui volume persistente. O frontend é servido por Nginx com fallback de rotas e proxy da API. O gateway HTTPS local é iniciado por `pnpm dev` ou `pnpm https:local`, fora dos containers. O Compose não é uma configuração completa de produção.
 
 ## Fluxos disponíveis
 

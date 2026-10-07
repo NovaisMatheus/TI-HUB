@@ -5,3 +5,5 @@ apps/api/.env
 .local/
 coverage/
 *.log
+apps/web/public/downloads/ti-hub-rede.cer
+apps/web/public/downloads/instalar-acesso-ti-hub.ps1

@@ -63,7 +63,7 @@ O script `scripts/configurar-rede-local.ps1`, executado como administrador do Wi
 
 Em **Meu perfil**, use **Baixar extensão Chrome**, extraia o ZIP, abra `chrome://extensions`, ative Modo do desenvolvedor e escolha **Carregar sem compactação**, selecionando a pasta extraída. Configure a extensão com `http://192.168.10.9:5173` e sua própria credencial. Aceite a permissão para esse endereço quando o Chrome solicitar. A coleta continua disponível pelo botão flutuante no 1Doc.
 
-Uma conexão Google Chat já autorizada pode ser utilizada no Hub pela rede. Para autorizar uma nova conexão, a configuração OAuth atual ainda usa o navegador do servidor em `http://localhost:5173`. Autorizações em outros computadores exigem um domínio HTTPS configurado no Google Cloud; trocar o callback para um IP privado HTTP não resolve. O Hub mostra essa orientação antes de iniciar uma autorização pelo endereço da rede.
+HTTPS foi preparado em `https://ti-hub.192-168-10-9.sslip.io` com certificado local e configurador de confiança/hosts por PC. Siga o [guia HTTPS](https-rede-local.md). O callback OAuth operacional usa esse nome; sua inclusão no cliente Google Cloud permanece necessária para novas autorizações. Conexões já autorizadas podem ser utilizadas pela rede. O IP HTTP não substitui um nome HTTPS no retorno Google.
 
 ## Diagnóstico habitual
 

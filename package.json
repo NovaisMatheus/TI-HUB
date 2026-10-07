@@ -3,7 +3,9 @@
   "private": true,
   "packageManager": "pnpm@11.19.0",
   "scripts": {
-    "dev": "pnpm extension:package && concurrently -n api,web -c blue,green \"pnpm --filter @hub/api dev\" \"pnpm --filter @hub/web dev\"",
+    "https:prepare": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/preparar-https-local.ps1",
+    "https:local": "node scripts/https-local.mjs",
+    "dev": "pnpm extension:package && concurrently -n api,web,https -c blue,green,magenta \"pnpm --filter @hub/api dev\" \"pnpm --filter @hub/web dev\" \"node scripts/start-https-if-configured.mjs\"",
     "build": "pnpm extension:package && pnpm -r build",
     "extension:package": "node scripts/package-extension.mjs",
     "typecheck": "pnpm -r typecheck",

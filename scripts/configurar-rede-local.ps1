@@ -18,6 +18,15 @@ try {
   } else {
     New-NetFirewallRule -Name $ruleName -DisplayName 'UGB TI Hub - Rede local TCP 5173' -Enabled True -Direction Inbound -Action Allow -Profile Any -Protocol TCP -LocalPort 5173 -LocalAddress '192.168.10.9' -RemoteAddress '192.168.0.0/16' -EdgeTraversalPolicy Block | Out-Null
   }
+  if (Test-Path -LiteralPath (Join-Path $taskRoot '.local\tls\config.json')) {
+    $httpsRuleName = 'UGB-TI-HUB-LAN-HTTPS-443'
+    if (Get-NetFirewallRule -Name $httpsRuleName -ErrorAction SilentlyContinue) {
+      Set-NetFirewallRule -Name $httpsRuleName -Enabled True -Direction Inbound -Action Allow -Profile Any -Protocol TCP -LocalPort 443 -LocalAddress '192.168.10.9' -RemoteAddress '192.168.0.0/16' | Out-Null
+    } else {
+      New-NetFirewallRule -Name $httpsRuleName -DisplayName 'UGB TI Hub - HTTPS rede local TCP 443' -Enabled True -Direction Inbound -Action Allow -Profile Any -Protocol TCP -LocalPort 443 -LocalAddress '192.168.10.9' -RemoteAddress '192.168.0.0/16' -EdgeTraversalPolicy Block | Out-Null
+    }
+    & (Join-Path $taskRoot 'apps\web\public\downloads\instalar-acesso-ti-hub.ps1')
+  }
   @{ success = $true; address = 'http://192.168.10.9:5173'; allowedNetwork = '192.168.0.0/16'; at = (Get-Date).ToString('o') } | ConvertTo-Json | Set-Content -LiteralPath $resultPath -Encoding UTF8
 } catch {
   @{ success = $false; message = $_.Exception.Message; at = (Get-Date).ToString('o') } | ConvertTo-Json | Set-Content -LiteralPath $resultPath -Encoding UTF8

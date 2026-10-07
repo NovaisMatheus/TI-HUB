@@ -123,6 +123,21 @@ export function Profile({ user }: { user: SessionUser }) {
         <p>{user.email}</p>
       </section>
       {user.permissions.includes('demands.write') && <ExtensionSettings />}
+      <section className="detail-section">
+        <h2>Acesso HTTPS na rede</h2>
+        <p>
+          Nesta instalação, baixe o configurador e execute como administrador em cada PC. Ele
+          instala o certificado de confiança do Hub e o endereço interno. Reinicie o navegador
+          depois da instalação.
+        </p>
+        <a className="button button-outline" href="/downloads/instalar-acesso-ti-hub.ps1" download>
+          Baixar configurador HTTPS deste PC
+        </a>
+        <p>
+          Endereço HTTPS:{' '}
+          <a href="https://ti-hub.192-168-10-9.sslip.io">https://ti-hub.192-168-10-9.sslip.io</a>
+        </p>
+      </section>
       <PasswordSettings />
       <section className="detail-section">
         <h2>Inteligência artificial</h2>

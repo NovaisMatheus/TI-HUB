@@ -9,7 +9,11 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
   @Public()
   @Post('login')
-  async login(@Body() body: unknown, @Res({ passthrough: true }) response: Response) {
+  async login(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: Response,
+    @Req() request: AuthRequest,
+  ) {
     const data = validate(
       z
         .object({
@@ -27,7 +31,8 @@ export class AuthController {
     const session = await this.auth.login(data.email, data.password);
     response.cookie('hub_session', session.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure:
+        process.env.NODE_ENV === 'production' || request.headers['x-forwarded-proto'] === 'https',
       sameSite: 'strict',
       maxAge: 8 * 3600000,
       path: '/api',

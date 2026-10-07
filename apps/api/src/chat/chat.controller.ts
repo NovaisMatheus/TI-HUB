@@ -69,7 +69,9 @@ export class ChatController {
     const { state, url } = await this.google.start(req.user.id);
     res.cookie('hub_google_state', state, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure:
+        process.env.NODE_ENV === 'production' ||
+        new URL(process.env.GOOGLE_CHAT_REDIRECT_URI!).protocol === 'https:',
       sameSite: 'lax',
       path: '/api/chat/google/callback',
       maxAge: 600000,

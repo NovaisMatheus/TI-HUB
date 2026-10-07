@@ -24,7 +24,7 @@ GOOGLE_CHAT_ENCRYPTION_KEY=chave-aleatoria-de-32-bytes-em-64-caracteres-hexadeci
 
 ### Autorizar a conta a partir de outros computadores
 
-O Hub está acessível pela rede em `http://192.168.10.9:5173`, mas o callback OAuth atualmente está configurado em `http://localhost:5173/api/chat/google/callback`. Na outra máquina, localhost é a própria máquina, não o servidor. O Google não aceita substituir esse callback por um IP privado HTTP: para um cliente Web, exige HTTPS e um nome de domínio, com exceção de localhost para desenvolvimento. Consulte as [regras oficiais de validação do retorno OAuth](https://developers.google.com/identity/protocols/oauth2/web-server#redirect-uri-validation).
+O Hub está acessível pela rede em `http://192.168.10.9:5173`. O antigo retorno localhost foi substituído na configuração operacional por `https://ti-hub.192-168-10-9.sslip.io/api/chat/google/callback`. Siga o [guia HTTPS local](https-rede-local.md) para instalar confiança e o nome em cada PC e cadastrar esse URI no Google Cloud. O Google não aceita um IP privado HTTP como callback: exige HTTPS e nome de domínio, com exceção de localhost para desenvolvimento. Consulte as [regras oficiais de validação do retorno OAuth](https://developers.google.com/identity/protocols/oauth2/web-server#redirect-uri-validation).
 
 Para permitir novas autorizações em todos os computadores:
 
@@ -34,7 +34,7 @@ Para permitir novas autorizações em todos os computadores:
 4. Atualize `CORS_ORIGIN=https://DOMINIO_DO_HUB` e `GOOGLE_CHAT_REDIRECT_URI=https://DOMINIO_DO_HUB/api/chat/google/callback` no `.env`. Preserve os segredos e a chave de criptografia existentes. Reinicie a API e acesse o Hub pelo domínio HTTPS em todos os computadores para iniciar a autorização.
 5. Valide o login do Hub e o consentimento Google em outra máquina. Contas já autorizadas continuam vinculadas ao mesmo usuário do Hub.
 
-O chat identifica a diferença entre o endereço acessado e o endereço de autorização antes de iniciar OAuth. O domínio, o certificado e o cadastro no Google Cloud ainda precisam ser definidos para concluir essa configuração nesta instalação.
+O chat identifica a diferença entre o endereço acessado e o endereço de autorização antes de iniciar OAuth. Nesta instalação, o certificado e o nome local estão preparados; faltam a instalação por PC e o cadastro do URI no Google Cloud para concluir novas autorizações pela rede.
 
 ### Leitura funciona, mas o envio falha
 
