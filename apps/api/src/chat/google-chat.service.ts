@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+  HttpException,
+} from '@nestjs/common';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { PrismaService } from '../common/prisma.service';
@@ -16,6 +21,13 @@ const tokenSchema = z.object({
   scope: z.string().optional(),
 });
 export const spaceIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,200}$/);
+const googleErrorSchema = z.object({
+  error: z.object({
+    status: z.string().optional(),
+    message: z.string().optional(),
+    details: z.array(z.object({ reason: z.string().optional() }).passthrough()).optional(),
+  }),
+});
 @Injectable()
 export class GoogleChatService {
   constructor(
@@ -156,14 +168,71 @@ export class GoogleChatService {
       body: data ? JSON.stringify(data) : undefined,
       signal: AbortSignal.timeout(15000),
     });
-    if (!response.ok)
-      throw new BadRequestException(
+    if (!response.ok) {
+      const parsed = googleErrorSchema.safeParse(await response.json().catch(() => null));
+      const error = parsed.success ? parsed.data.error : undefined;
+      const safeCode = (value?: string) =>
+        value && /^[A-Z][A-Z_0-9]{0,79}$/.test(value) ? value : undefined;
+      const googleStatus = safeCode(error?.status);
+      const reason = error?.details?.map((detail) => safeCode(detail.reason)).find(Boolean);
+      // Keep tokens and arbitrary Google error contents out of logs.
+      console.warn(
+        JSON.stringify({
+          event: 'google_chat_failed',
+          operation: data ? 'send' : 'read',
+          googleHttpStatus: response.status,
+          googleStatus,
+          reason,
+        }),
+      );
+      let explanation =
         response.status === 401
           ? 'Sessão Google expirada. Desconecte e autorize novamente.'
           : response.status === 403
-            ? 'Google não permitiu acessar este espaço. Verifique sua conta e as políticas da organização.'
-            : 'Não foi possível acessar o Google Chat. Tente novamente.',
+            ? 'Google não permitiu esta operação. Verifique as permissões de envio e as políticas da organização.'
+            : response.status === 404
+              ? 'Google não encontrou o espaço ou a configuração do aplicativo de Chat.'
+              : response.status === 429
+                ? 'Limite de requisições do Google atingido. Aguarde antes de tentar novamente.'
+                : response.status >= 500
+                  ? 'Google Chat está indisponível temporariamente.'
+                  : 'Google recusou esta operação.';
+      if (
+        /chat app (?:not found|is not configured)|chat application (?:not found|is not configured)/i.test(
+          error?.message ?? '',
+        )
+      )
+        explanation =
+          'Configure o aplicativo TI Hub em Google Cloud → Google Chat API → Configuração. A leitura pode funcionar antes dessa configuração, mas o envio exige o aplicativo configurado.';
+      else if (reason === 'SERVICE_DISABLED')
+        explanation = 'Ative a Google Chat API no projeto do cliente OAuth usado pelo Hub.';
+      // Display only Google's message, with known credentials and token patterns redacted.
+      let detail = error?.message ?? '';
+      for (const secret of [
+        vault.decrypt(connection.accessToken),
+        process.env.GOOGLE_CHAT_CLIENT_SECRET,
+        process.env.GOOGLE_CHAT_ENCRYPTION_KEY,
+      ])
+        if (secret) detail = detail.split(secret).join('[credencial ocultada]');
+      detail = detail
+        .replace(/Bearer\s+\S+/gi, 'Bearer [ocultado]')
+        .split('')
+        .map((character) => (character.charCodeAt(0) < 32 ? ' ' : character))
+        .join('')
+        .slice(0, 400);
+      const code = [googleStatus, reason].filter(Boolean).join(' / ');
+      const message = `${data ? 'Falha ao enviar mensagem' : 'Falha ao carregar Google Chat'}: ${explanation} (Google HTTP ${response.status}${code ? ` · ${code}` : ''})${detail ? ` Detalhe: ${detail}` : ''}`;
+      // Upstream 401 must not be mistaken for an expired Hub session.
+      const status = [400, 403, 404, 429].includes(response.status)
+        ? response.status
+        : response.status >= 500
+          ? 503
+          : 502;
+      throw new HttpException(
+        { message, googleHttpStatus: response.status, googleStatus, reason },
+        status,
       );
+    }
     return response.json() as Promise<Record<string, unknown>>;
   }
   async disconnect(userId: string) {

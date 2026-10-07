@@ -31,6 +31,7 @@ function setup() {
   return { db, service };
 }
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -71,17 +72,15 @@ describe('OAuth e acesso Google Chat', () => {
     });
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue({
-          ok: true,
-          json: async () => ({
-            access_token: 'qa-access',
-            refresh_token: 'qa-refresh',
-            expires_in: 3600,
-            scope: googleScopes.join(' '),
-          }),
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          access_token: 'qa-access',
+          refresh_token: 'qa-refresh',
+          expires_in: 3600,
+          scope: googleScopes.join(' '),
         }),
+      }),
     );
     await service.complete(state, state, 'qa-code');
     const saved = db.googleChatConnection.upsert.mock.calls[0][0].create;
@@ -102,5 +101,92 @@ describe('OAuth e acesso Google Chat', () => {
     await service.request('user', 'spaces/qa/messages', { text: 'Ideia' });
     expect(fetch.mock.calls[0][0]).toBe('https://chat.googleapis.com/v1/spaces/qa/messages');
     expect(fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer qa-access');
+    expect(fetch.mock.calls[0][1].headers['Content-Type']).toBe('application/json');
+    expect(fetch.mock.calls[0][1].body).toBe(JSON.stringify({ text: 'Ideia' }));
+  });
+  it('identifica aplicativo não configurado e mantém o status original sem repetir o envio', async () => {
+    const { db, service } = setup();
+    db.googleChatConnection.findUnique.mockResolvedValue({
+      accessToken: vault.encrypt('qa-access'),
+      expiresAt: new Date(Date.now() + 3600000),
+    });
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetch = vi
+      .fn()
+      .mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({
+          error: { status: 'NOT_FOUND', message: 'Google Chat app not found. Configure the app.' },
+        }),
+      });
+    vi.stubGlobal('fetch', fetch);
+    let failure;
+    try {
+      await service.request('user', 'spaces/qa/messages', { text: 'Ideia' });
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure.getStatus()).toBe(404);
+    expect(failure.getResponse().message).toContain(
+      'Google Cloud → Google Chat API → Configuração',
+    );
+    expect(failure.getResponse().googleHttpStatus).toBe(404);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(warning.mock.calls[0][0]).not.toContain('qa-access');
+  });
+  it('oculta credenciais no detalhe e distingue falha do Google de sessão do Hub', async () => {
+    const { db, service } = setup();
+    db.googleChatConnection.findUnique.mockResolvedValue({
+      accessToken: vault.encrypt('qa-access'),
+      expiresAt: new Date(Date.now() + 3600000),
+    });
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue({
+          ok: false,
+          status: 401,
+          json: async () => ({
+            error: {
+              status: 'UNAUTHENTICATED',
+              message: 'qa-access qa-secret Bearer arbitrary-token',
+            },
+          }),
+        }),
+    );
+    let failure;
+    try {
+      await service.request('user', 'spaces/qa/messages', { text: 'Ideia' });
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure.getStatus()).toBe(502);
+    expect(failure.getResponse().googleHttpStatus).toBe(401);
+    expect(failure.getResponse().message).not.toMatch(/qa-access|qa-secret|arbitrary-token/);
+    expect(warning.mock.calls[0][0]).not.toMatch(/qa-access|qa-secret|arbitrary-token/);
+  });
+  it('identifica API desativada mesmo quando o Google devolve erro de permissão', async () => {
+    const { db, service } = setup();
+    db.googleChatConnection.findUnique.mockResolvedValue({
+      accessToken: vault.encrypt('qa-access'),
+      expiresAt: new Date(Date.now() + 3600000),
+    });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            error: { status: 'PERMISSION_DENIED', details: [{ reason: 'SERVICE_DISABLED' }] },
+          }),
+        }),
+    );
+    await expect(service.request('user', 'spaces')).rejects.toThrow('Ative a Google Chat API');
   });
 });

@@ -64,7 +64,7 @@ it('preserva o rascunho e reutiliza a chave de envio quando a tentativa falha', 
   mount();
   await userEvent.type(screen.getByLabelText('Mensagem para troca de ideias'), 'Minha ideia');
   await userEvent.click(screen.getByRole('button', { name: 'Enviar mensagem' }));
-  await screen.findByText('Falha de rede');
+  await screen.findByText('Falha de rede Seu texto foi preservado para tentar novamente.');
   expect(
     (screen.getByLabelText('Mensagem para troca de ideias') as HTMLTextAreaElement).value,
   ).toBe('Minha ideia');

@@ -105,7 +105,7 @@ export function ChatPanel({
       await client.invalidateQueries({ queryKey: ['chat-messages', user.id, target] });
     } catch (error) {
       setNotice(
-        error instanceof Error ? error.message : 'Falha ao enviar. Seu texto foi preservado.',
+        `${error instanceof Error ? error.message : 'Falha ao enviar.'} Seu texto foi preservado para tentar novamente.`,
       );
     } finally {
       setBusy(false);

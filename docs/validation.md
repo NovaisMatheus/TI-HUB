@@ -59,3 +59,10 @@ A aparência dos novos painéis e a extensão instalada ainda não foram verific
 ## Gestão de usuários — 07/10/2026
 
 38 testes automatizados aprovados; typecheck, lint e build concluídos. Teste HTTP de usuários validou cadastro, duplicidade, login por usuário/e-mail, controle de perfis, troca de senha, invalidação de sessões e desativação/reativação. Quinta migração aplicada. Contas solicitadas criadas localmente e seus logins verificados; credenciais iniciais em arquivo ignorado pelo Git. Verificação visual no navegador não realizada.
+
+## Diagnóstico de envio Google Chat — 07/10/2026
+
+41 testes automatizados, typecheck, lint e build aprovados. Consulta real da conta conectada à listagem de espaços Google aprovada. Corpo de envio validado como JSON com text, Content-Type application/json e Authorization Bearer. Testes cobrem aplicativo não configurado, API desativada, credenciais ocultadas no detalhe, status original e ausência de repetição automática do envio. Envio real ainda não confirmado; depende do próximo erro detalhado ou da configuração do projeto Google.
+
+Após nova tentativa de envio realizada pelo usuário, causa confirmada pelo Google: HTTP 404, NOT_FOUND, Google Chat app not found. Correção externa necessária: configurar o aplicativo em Google Chat API no projeto do cliente OAuth. O envio permanece pendente dessa configuração.
+

@@ -22,12 +22,18 @@ GOOGLE_CHAT_ENCRYPTION_KEY=chave-aleatoria-de-32-bytes-em-64-caracteres-hexadeci
 
 5. Reinicie a API. No painel à direita, abra **Google Chat → Conectar Google Chat**, escolha a conta e autorize os três escopos. Depois selecione o espaço para conversar.
 
+### Leitura funciona, mas o envio falha
+
+Habilitar a API e criar OAuth é suficiente para leitura. Para criar mensagens, configure também o aplicativo no **mesmo projeto do cliente OAuth**, em **Google Chat API → Configuração**: nome do aplicativo, URL HTTPS de uma imagem quadrada PNG/JPEG e descrição. Para a integração atual do Hub, os recursos interativos podem permanecer desativados. Salve a configuração. Consulte a [configuração oficial do Google Chat](https://developers.google.com/workspace/chat/configure-chat-api).
+
+As falhas agora mostram a operação, o status HTTP original do Google, o código/reason quando disponível e um detalhe limitado da resposta, com credenciais conhecidas ocultadas. Os logs registram somente operação e códigos; não registram mensagens, corpo bruto da resposta ou tokens. A interface mantém o texto para repetir o envio com o mesmo requestId. Uma falha de autenticação do Google não é tratada como expiração da sessão do Hub.
+
 Em produção, use HTTPS e o URI correspondente ao domínio do Hub, encaminhando `/api` ao backend. `CORS_ORIGIN` deve apontar para esse mesmo frontend. Tokens não são expostos ao navegador; ficam criptografados com AES-GCM no banco. Preserve a chave de criptografia em backup seguro. Trocar a chave invalida a leitura das conexões existentes e exige removê-las e autorizar novamente.
 
 O OAuth usa estado aleatório de uso único, com dez minutos de validade e vínculo ao navegador por cookie HttpOnly/SameSite=Lax. O verificador PKCE é criptografado. A permissão do usuário é revalidada no retorno. **Desconectar conta** remove a conexão e autorizações pendentes do Hub; para revogar o consentimento também no Google, use a gestão de aplicativos da conta Google.
 
 ## Estado desta entrega
 
-Chat interno validado por HTTP com PostgreSQL real. OAuth, armazenamento criptografado e encaminhamento à API Google verificados com respostas simuladas. A conexão Google não foi ativada porque as credenciais não estão configuradas, e não houve login/consentimento Google real. Sem configuração, a interface informa essa condição e não simula mensagens Google. A inspeção visual pelo navegador permanece indisponível pela política da ferramenta.
+Chat interno validado por HTTP com PostgreSQL real. OAuth, armazenamento criptografado, encaminhamento à API Google e diagnóstico de falhas verificados por testes automatizados. Após o consentimento realizado pelo usuário, uma consulta real à API Google confirmou a listagem de espaços em 07/10/2026. Uma tentativa de envio feita pelo usuário confirmou o erro Google HTTP 404 / NOT_FOUND / “Google Chat app not found”: falta configurar o aplicativo no projeto Google Cloud. O envio real permanece pendente dessa configuração externa; nenhuma mensagem externa foi enviada automaticamente pelos testes. A inspeção visual pelo navegador permanece indisponível pela política da ferramenta.
 
 Referências: [autorização OAuth](https://developers.google.com/identity/protocols/oauth2/web-server), [autenticação do Chat](https://developers.google.com/workspace/chat/authenticate-authorize), [listagem de mensagens](https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces.messages/list) e [envio de mensagens](https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces.messages/create).
