@@ -40,9 +40,12 @@ export class AuthService {
     };
   }
   async login(email: string, password: string) {
-    const user = await this.db.user.findUnique({ where: { email } });
+    const user = await this.db.user.findFirst({ where: { OR: [{ email }, { username: email }] } });
     if (!user?.active || !(await compare(password, user.passwordHash)))
-      throw new UnauthorizedException('Email ou senha inválidos.');
-    return { token: await this.jwt.signAsync({ sub: user.id }), user: await this.user(user.id) };
+      throw new UnauthorizedException('Usuário, e-mail ou senha inválidos.');
+    return {
+      token: await this.jwt.signAsync({ sub: user.id, version: user.sessionVersion }),
+      user: await this.user(user.id),
+    };
   }
 }

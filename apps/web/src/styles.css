@@ -2037,3 +2037,20 @@ pre {
       color 0.15s;
   }
 }
+
+.account-form {
+  display: grid;
+  gap: 14px;
+  max-width: 620px;
+  margin: 20px 0;
+}
+.account-form label {
+  display: grid;
+  gap: 6px;
+}
+.account-form .checkbox-label {
+  display: flex;
+}
+.account-form small {
+  color: var(--muted);
+}

@@ -7,7 +7,7 @@ import { Button } from '@hub/ui';
 import type { SessionUser } from '@hub/types';
 import { send } from '../../services/api';
 const schema = z.object({
-  email: z.string().email('Informe um email válido.'),
+  email: z.string().trim().min(2, 'Informe seu usuário ou e-mail.'),
   password: z.string().min(1, 'Informe sua senha.'),
 });
 export function Login({ onLogin }: { onLogin: (user: SessionUser) => void }) {
@@ -18,7 +18,7 @@ export function Login({ onLogin }: { onLogin: (user: SessionUser) => void }) {
     formState: { errors, isSubmitting },
   } = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { email: 'admin@hub.local' },
+    defaultValues: { email: '' },
   });
   return (
     <div className="login-page">
@@ -65,8 +65,8 @@ export function Login({ onLogin }: { onLogin: (user: SessionUser) => void }) {
             })}
           >
             <label>
-              Email institucional
-              <input type="email" autoComplete="username" {...register('email')} />
+              Usuário ou e-mail
+              <input type="text" autoComplete="username" {...register('email')} />
               <small className="error">{errors.email?.message}</small>
             </label>
             <label>
@@ -84,8 +84,9 @@ export function Login({ onLogin }: { onLogin: (user: SessionUser) => void }) {
             </Button>
           </form>
           <div className="login-info">
-            Ambiente local · autenticação de desenvolvimento
-            <br />A senha é definida em SEED_PASSWORD no arquivo .env.
+            Utilize sua conta de acesso ao TI Hub.
+            <br />
+            Solicite ao administrador o cadastro ou a redefinição da senha.
           </div>
         </div>
       </section>

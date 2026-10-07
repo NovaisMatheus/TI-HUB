@@ -19,6 +19,7 @@
     "test:interface": "node scripts/interface-smoke.mjs",
     "test:1doc": "node scripts/one-doc-smoke.mjs",
     "test:chat": "node scripts/chat-smoke.mjs",
+    "test:users": "node scripts/users-smoke.mjs",
     "setup:local": "node scripts/setup-local.mjs"
   },
   "devDependencies": {

@@ -6,7 +6,8 @@ import { display, object, type Entity } from '../../types';
 import type { Page, SessionUser } from '@hub/types';
 import { ExtensionSettings } from '../demands/ExtensionSettings';
 import { PageHeader, State } from '../../components/PageHeader';
-export function Administration() {
+import { Users, PasswordSettings } from './Users';
+export function Administration({ user }: { user: SessionUser }) {
   const [page, setPage] = useState(1),
     [q, setQ] = useState('');
   const result = useQuery({
@@ -24,6 +25,7 @@ export function Administration() {
         title="Administração"
         description="Rastreabilidade de alterações e estado das integrações."
       />
+      {user.permissions.includes('users.write') && <Users />}
       <div className="integration-grid">
         {integrations.data?.providers.map((p) => (
           <article className="detail-section" key={String(p.name)}>
@@ -116,7 +118,12 @@ export function Profile({ user }: { user: SessionUser }) {
         title="Meu perfil"
         description="Preferências pessoais e configuração do assistente."
       />
+      <section className="detail-section">
+        <h2>{user.name}</h2>
+        <p>{user.email}</p>
+      </section>
       {user.permissions.includes('demands.write') && <ExtensionSettings />}
+      <PasswordSettings />
       <section className="detail-section">
         <h2>Inteligência artificial</h2>
         <p>Provider atual: mock · modelo de recuperação de registros.</p>

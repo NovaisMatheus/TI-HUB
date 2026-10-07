@@ -13,6 +13,8 @@ model User {
   updatedAt                          DateTime                  @updatedAt
   name                               String
   email                              String                    @unique
+  username                           String?                   @unique
+  sessionVersion                     Int                       @default(0)
   passwordHash                       String
   active                             Boolean                   @default(true)
   theme                              String                    @default("system")

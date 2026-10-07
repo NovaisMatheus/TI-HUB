@@ -58,7 +58,13 @@ export class AuthGuard implements CanActivate {
           throw new UnauthorizedException();
         request.user = await this.auth.user(credential.userId);
       } else {
-        const payload = await this.jwt.verifyAsync<{ sub: string }>(token);
+        const payload = await this.jwt.verifyAsync<{ sub: string; version?: number }>(token);
+        const account = await this.db.user.findUnique({
+          where: { id: payload.sub },
+          select: { sessionVersion: true },
+        });
+        if (!account || account.sessionVersion !== (payload.version ?? 0))
+          throw new UnauthorizedException();
         request.user = await this.auth.user(payload.sub);
       }
     } catch {

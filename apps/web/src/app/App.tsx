@@ -72,7 +72,7 @@ export function App() {
       >
         <Route index element={<Dashboard user={user} onSearch={() => setSearch(true)} />} />
         <Route path="assistant" element={<Assistant />} />
-        <Route path="administration" element={<Administration />} />
+        <Route path="administration" element={<Administration user={user} />} />
         <Route path="profile" element={<Profile user={user} />} />
         <Route path="tools" element={<Tools />} />
         <Route path=":name" element={<ResourceRoute catalog={catalog.data ?? {}} user={user} />} />

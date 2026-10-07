@@ -15,7 +15,9 @@ export class AuthController {
         .object({
           email: z
             .string()
-            .email()
+            .trim()
+            .min(2)
+            .max(254)
             .transform((v) => v.toLowerCase()),
           password: z.string().min(1).max(256),
         })

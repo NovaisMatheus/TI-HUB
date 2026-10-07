@@ -5,6 +5,7 @@ import { PrismaService } from './common/prisma.service';
 import { AuthService } from './auth/auth.service';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthController } from './auth/auth.controller';
+import { UsersController } from './auth/users.controller';
 import { ResourceController } from './resources/resource.controller';
 import { ResourceService } from './resources/resource.service';
 import { WorkflowService } from './acquisitions/workflow.service';
@@ -18,7 +19,13 @@ import { GoogleChatService } from './chat/google-chat.service';
   imports: [
     JwtModule.register({ secret: process.env.JWT_SECRET, signOptions: { expiresIn: '8h' } }),
   ],
-  controllers: [AuthController, ResourceController, DemandController, ChatController],
+  controllers: [
+    AuthController,
+    UsersController,
+    ResourceController,
+    DemandController,
+    ChatController,
+  ],
   providers: [
     PrismaService,
     AuthService,

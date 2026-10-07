@@ -28,7 +28,7 @@ async function seed() {
     'admin.audit.read',
   ];
   const roles = [
-    ['ADMINISTRADOR', keys],
+    ['ADMINISTRADOR', [...keys, 'users.read', 'users.write']],
     ['TECNICO', keys.filter((k) => k !== 'admin.audit.read')],
     ['CONSULTA', keys.filter((k) => k.endsWith('.read') && k !== 'admin.audit.read')],
   ] as const;

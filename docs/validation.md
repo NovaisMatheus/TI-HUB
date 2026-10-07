@@ -55,3 +55,7 @@ O Chrome instalado e uma sessão autenticada real do 1Doc não foram controlados
 - Quatro migrations aplicadas; TypeScript, ESLint, build e auditoria de produção aprovados.
 
 A aparência dos novos painéis e a extensão instalada ainda não foram verificadas em navegador real, respeitando o bloqueio da ferramenta. Conta Google e chamadas externas reais também não foram verificadas; consulte `google-chat.md` para configuração.
+
+## Gestão de usuários — 07/10/2026
+
+38 testes automatizados aprovados; typecheck, lint e build concluídos. Teste HTTP de usuários validou cadastro, duplicidade, login por usuário/e-mail, controle de perfis, troca de senha, invalidação de sessões e desativação/reativação. Quinta migração aplicada. Contas solicitadas criadas localmente e seus logins verificados; credenciais iniciais em arquivo ignorado pelo Git. Verificação visual no navegador não realizada.
