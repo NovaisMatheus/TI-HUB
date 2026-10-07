@@ -1,0 +1,729 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                                 String                    @id @default(cuid())
+  createdAt                          DateTime                  @default(now())
+  updatedAt                          DateTime                  @updatedAt
+  name                               String
+  email                              String                    @unique
+  passwordHash                       String
+  active                             Boolean                   @default(true)
+  theme                              String                    @default("system")
+  userRole_user                      UserRole[]                @relation("UserRole_user")
+  equipmentStatusHistory_user        EquipmentStatusHistory[]  @relation("EquipmentStatusHistory_user")
+  maintenanceRecord_technician       MaintenanceRecord[]       @relation("MaintenanceRecord_technician")
+  knowledgeArticle_author            KnowledgeArticle[]        @relation("KnowledgeArticle_author")
+  knowledgeArticleVersion_author     KnowledgeArticleVersion[] @relation("KnowledgeArticleVersion_author")
+  technicalRecommendation_author     TechnicalRecommendation[] @relation("TechnicalRecommendation_author")
+  recommendationFeedback_user        RecommendationFeedback[]  @relation("RecommendationFeedback_user")
+  scriptEntry_author                 ScriptEntry[]             @relation("ScriptEntry_author")
+  technicalSpecification_responsible TechnicalSpecification[]  @relation("TechnicalSpecification_responsible")
+  purchaseRequest_responsible        PurchaseRequest[]         @relation("PurchaseRequest_responsible")
+  purchaseProcess_responsible        PurchaseProcess[]         @relation("PurchaseProcess_responsible")
+  technicalAnalysis_technician       TechnicalAnalysis[]       @relation("TechnicalAnalysis_technician")
+  technicalInspection_technician     TechnicalInspection[]     @relation("TechnicalInspection_technician")
+  timelineEvent_user                 TimelineEvent[]           @relation("TimelineEvent_user")
+  documentReference_createdBy        DocumentReference[]       @relation("DocumentReference_createdBy")
+  aIConfiguration_user               AIConfiguration?          @relation("AIConfiguration_user")
+  aIConversation_user                AIConversation[]          @relation("AIConversation_user")
+  auditLog_user                      AuditLog[]                @relation("AuditLog_user")
+}
+
+model Role {
+  id                  String           @id @default(cuid())
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  name                String           @unique
+  userRole_role       UserRole[]       @relation("UserRole_role")
+  rolePermission_role RolePermission[] @relation("RolePermission_role")
+}
+
+model Permission {
+  id                        String           @id @default(cuid())
+  createdAt                 DateTime         @default(now())
+  updatedAt                 DateTime         @updatedAt
+  key                       String           @unique
+  rolePermission_permission RolePermission[] @relation("RolePermission_permission")
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation("UserRole_user", fields: [userId], references: [id])
+  roleId    String
+  role      Role     @relation("UserRole_role", fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  roleId       String
+  role         Role       @relation("RolePermission_role", fields: [roleId], references: [id])
+  permissionId String
+  permission   Permission @relation("RolePermission_permission", fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model Department {
+  id                         String            @id @default(cuid())
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+  name                       String            @unique
+  location                   String
+  equipment_department       Equipment[]       @relation("Equipment_department")
+  purchaseRequest_department PurchaseRequest[] @relation("PurchaseRequest_department")
+}
+
+model Equipment {
+  id                               String                   @id @default(cuid())
+  createdAt                        DateTime                 @default(now())
+  updatedAt                        DateTime                 @updatedAt
+  hostname                         String                   @unique
+  assetTag                         String                   @unique
+  serial                           String
+  manufacturer                     String
+  model                            String
+  assignedUser                     String
+  status                           String                   @default("OPERACIONAL")
+  notes                            String                   @default("")
+  source                           String                   @default("LOCAL")
+  glpiId                           String?
+  lastSyncedAt                     DateTime?
+  dataPolicy                       String                   @default("INSTITUTIONAL_ONLY")
+  departmentId                     String
+  department                       Department               @relation("Equipment_department", fields: [departmentId], references: [id])
+  equipmentNetwork_equipment       EquipmentNetwork?        @relation("EquipmentNetwork_equipment")
+  equipmentHardware_equipment      EquipmentHardware?       @relation("EquipmentHardware_equipment")
+  equipmentStatusHistory_equipment EquipmentStatusHistory[] @relation("EquipmentStatusHistory_equipment")
+  maintenanceRecord_equipment      MaintenanceRecord[]      @relation("MaintenanceRecord_equipment")
+
+  @@index([departmentId])
+}
+
+model EquipmentNetwork {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  ip          String
+  mac         String    @default("")
+  vlan        String    @default("")
+  gateway     String    @default("")
+  equipmentId String    @unique
+  equipment   Equipment @relation("EquipmentNetwork_equipment", fields: [equipmentId], references: [id])
+}
+
+model EquipmentHardware {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  cpu         String
+  ram         String
+  storage     String
+  os          String
+  equipmentId String    @unique
+  equipment   Equipment @relation("EquipmentHardware_equipment", fields: [equipmentId], references: [id])
+}
+
+model EquipmentStatusHistory {
+  id             String    @id @default(cuid())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  previousStatus String
+  status         String
+  reason         String
+  equipmentId    String
+  equipment      Equipment @relation("EquipmentStatusHistory_equipment", fields: [equipmentId], references: [id])
+  userId         String
+  user           User      @relation("EquipmentStatusHistory_user", fields: [userId], references: [id])
+
+  @@index([equipmentId])
+  @@index([userId])
+}
+
+model MaintenanceRecord {
+  id                                  String                    @id @default(cuid())
+  createdAt                           DateTime                  @default(now())
+  updatedAt                           DateTime                  @updatedAt
+  type                                String
+  problem                             String
+  diagnosis                           String                    @default("")
+  procedure                           String                    @default("")
+  solution                            String                    @default("")
+  status                              String                    @default("ABERTA")
+  components                          String                    @default("")
+  referral                            String                    @default("")
+  returnedAt                          DateTime?
+  notes                               String                    @default("")
+  occurredAt                          DateTime                  @default(now())
+  dataPolicy                          String                    @default("INSTITUTIONAL_ONLY")
+  equipmentId                         String
+  equipment                           Equipment                 @relation("MaintenanceRecord_equipment", fields: [equipmentId], references: [id])
+  technicianId                        String
+  technician                          User                      @relation("MaintenanceRecord_technician", fields: [technicianId], references: [id])
+  maintenanceAction_record            MaintenanceAction[]       @relation("MaintenanceAction_record")
+  technicalRecommendation_maintenance TechnicalRecommendation[] @relation("TechnicalRecommendation_maintenance")
+  knownSolution_maintenance           KnownSolution[]           @relation("KnownSolution_maintenance")
+
+  @@index([equipmentId])
+  @@index([technicianId])
+}
+
+model MaintenanceAction {
+  id          String            @id @default(cuid())
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  description String
+  occurredAt  DateTime          @default(now())
+  recordId    String
+  record      MaintenanceRecord @relation("MaintenanceAction_record", fields: [recordId], references: [id])
+
+  @@index([recordId])
+}
+
+model KnowledgeArticle {
+  id                              String                    @id @default(cuid())
+  createdAt                       DateTime                  @default(now())
+  updatedAt                       DateTime                  @updatedAt
+  code                            String                    @unique
+  title                           String
+  category                        String
+  tags                            String[]
+  status                          String                    @default("VIGENTE")
+  dataPolicy                      String                    @default("INSTITUTIONAL_ONLY")
+  authorId                        String
+  author                          User                      @relation("KnowledgeArticle_author", fields: [authorId], references: [id])
+  knowledgeArticleVersion_article KnowledgeArticleVersion[] @relation("KnowledgeArticleVersion_article")
+
+  @@index([authorId])
+}
+
+model KnowledgeArticleVersion {
+  id         String           @id @default(cuid())
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  version    Int
+  content    String
+  reviewedAt DateTime?
+  reviewerId String?
+  articleId  String
+  article    KnowledgeArticle @relation("KnowledgeArticleVersion_article", fields: [articleId], references: [id])
+  authorId   String
+  author     User             @relation("KnowledgeArticleVersion_author", fields: [authorId], references: [id])
+
+  @@unique([articleId, version])
+  @@index([articleId])
+  @@index([authorId])
+}
+
+model TechnicalRecommendation {
+  id                                    String                   @id @default(cuid())
+  createdAt                             DateTime                 @default(now())
+  updatedAt                             DateTime                 @updatedAt
+  title                                 String
+  description                           String
+  category                              String
+  tags                                  String[]
+  context                               String
+  justification                         String
+  appliesWhen                           String
+  doesNotApplyWhen                      String
+  priority                              String                   @default("RECOMENDADO")
+  status                                String                   @default("VIGENTE")
+  reviewedAt                            DateTime?
+  dataPolicy                            String                   @default("INSTITUTIONAL_ONLY")
+  authorId                              String
+  author                                User                     @relation("TechnicalRecommendation_author", fields: [authorId], references: [id])
+  maintenanceId                         String?
+  maintenance                           MaintenanceRecord?       @relation("TechnicalRecommendation_maintenance", fields: [maintenanceId], references: [id])
+  recommendationFeedback_recommendation RecommendationFeedback[] @relation("RecommendationFeedback_recommendation")
+
+  @@index([authorId])
+  @@index([maintenanceId])
+}
+
+model RecommendationFeedback {
+  id               String                  @id @default(cuid())
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  result           String
+  notes            String
+  recommendationId String
+  recommendation   TechnicalRecommendation @relation("RecommendationFeedback_recommendation", fields: [recommendationId], references: [id])
+  userId           String
+  user             User                    @relation("RecommendationFeedback_user", fields: [userId], references: [id])
+
+  @@index([recommendationId])
+  @@index([userId])
+}
+
+model KnownSolution {
+  id            String             @id @default(cuid())
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  title         String
+  description   String
+  category      String
+  tags          String[]
+  dataPolicy    String             @default("INSTITUTIONAL_ONLY")
+  maintenanceId String?
+  maintenance   MaintenanceRecord? @relation("KnownSolution_maintenance", fields: [maintenanceId], references: [id])
+
+  @@index([maintenanceId])
+}
+
+model ScriptEntry {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  name        String
+  description String
+  language    String
+  version     Int      @default(1)
+  category    String
+  code        String
+  notes       String   @default("")
+  authorId    String
+  author      User     @relation("ScriptEntry_author", fields: [authorId], references: [id])
+
+  @@index([authorId])
+}
+
+model TechnicalSpecification {
+  id                                 String                 @id @default(cuid())
+  createdAt                          DateTime               @default(now())
+  updatedAt                          DateTime               @updatedAt
+  code                               String                 @unique
+  name                               String
+  category                           String
+  summary                            String
+  status                             String                 @default("VIGENTE")
+  responsibleId                      String
+  responsible                        User                   @relation("TechnicalSpecification_responsible", fields: [responsibleId], references: [id])
+  specificationVersion_specification SpecificationVersion[] @relation("SpecificationVersion_specification")
+
+  @@index([responsibleId])
+}
+
+model SpecificationVersion {
+  id                                       String                     @id @default(cuid())
+  createdAt                                DateTime                   @default(now())
+  updatedAt                                DateTime                   @updatedAt
+  version                                  Int
+  content                                  String
+  specificationId                          String
+  specification                            TechnicalSpecification     @relation("SpecificationVersion_specification", fields: [specificationId], references: [id])
+  specificationRequirement_version         SpecificationRequirement[] @relation("SpecificationRequirement_version")
+  purchaseRequestItem_specificationVersion PurchaseRequestItem[]      @relation("PurchaseRequestItem_specificationVersion")
+  technicalAnalysis_specificationVersion   TechnicalAnalysis[]        @relation("TechnicalAnalysis_specificationVersion")
+
+  @@unique([specificationId, version])
+  @@index([specificationId])
+}
+
+model SpecificationRequirement {
+  id                                    String                      @id @default(cuid())
+  createdAt                             DateTime                    @default(now())
+  updatedAt                             DateTime                    @updatedAt
+  group                                 String
+  field                                 String
+  operator                              String
+  value                                 String
+  unit                                  String
+  valueType                             String
+  versionId                             String
+  version                               SpecificationVersion        @relation("SpecificationRequirement_version", fields: [versionId], references: [id])
+  analysisRequirementResult_requirement AnalysisRequirementResult[] @relation("AnalysisRequirementResult_requirement")
+
+  @@index([versionId])
+}
+
+model Supplier {
+  id                       String            @id @default(cuid())
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  legalName                String
+  tradeName                String
+  cnpj                     String            @unique
+  phone                    String
+  email                    String
+  notes                    String            @default("")
+  supplierContact_supplier SupplierContact[] @relation("SupplierContact_supplier")
+  proposal_supplier        Proposal[]        @relation("Proposal_supplier")
+  commitment_supplier      Commitment[]      @relation("Commitment_supplier")
+  timelineEvent_supplier   TimelineEvent[]   @relation("TimelineEvent_supplier")
+}
+
+model SupplierContact {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  name       String
+  email      String
+  phone      String
+  supplierId String
+  supplier   Supplier @relation("SupplierContact_supplier", fields: [supplierId], references: [id])
+
+  @@index([supplierId])
+}
+
+model PurchaseRequest {
+  id                          String                @id @default(cuid())
+  createdAt                   DateTime              @default(now())
+  updatedAt                   DateTime              @updatedAt
+  number                      String
+  year                        Int
+  unit                        String
+  object                      String
+  description                 String
+  date                        DateTime              @default(now())
+  status                      String                @default("RECEBIDA")
+  departmentId                String
+  department                  Department            @relation("PurchaseRequest_department", fields: [departmentId], references: [id])
+  responsibleId               String
+  responsible                 User                  @relation("PurchaseRequest_responsible", fields: [responsibleId], references: [id])
+  purchaseRequestItem_request PurchaseRequestItem[] @relation("PurchaseRequestItem_request")
+  purchaseProcess_request     PurchaseProcess[]     @relation("PurchaseProcess_request")
+  commitment_request          Commitment[]          @relation("Commitment_request")
+
+  @@unique([number, year])
+  @@index([departmentId])
+  @@index([responsibleId])
+}
+
+model PurchaseRequestItem {
+  id                       String               @id @default(cuid())
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  description              String
+  quantity                 Int
+  requestId                String
+  request                  PurchaseRequest      @relation("PurchaseRequestItem_request", fields: [requestId], references: [id])
+  specificationVersionId   String
+  specificationVersion     SpecificationVersion @relation("PurchaseRequestItem_specificationVersion", fields: [specificationVersionId], references: [id])
+  proposalItem_requestItem ProposalItem[]       @relation("ProposalItem_requestItem")
+
+  @@index([requestId])
+  @@index([specificationVersionId])
+}
+
+model PurchaseProcess {
+  id                        String              @id @default(cuid())
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+  number                    String              @unique
+  title                     String
+  status                    String              @default("EM_ANALISE")
+  date                      DateTime            @default(now())
+  dataPolicy                String              @default("INSTITUTIONAL_ONLY")
+  requestId                 String
+  request                   PurchaseRequest     @relation("PurchaseProcess_request", fields: [requestId], references: [id])
+  responsibleId             String
+  responsible               User                @relation("PurchaseProcess_responsible", fields: [responsibleId], references: [id])
+  proposal_process          Proposal[]          @relation("Proposal_process")
+  technicalAnalysis_process TechnicalAnalysis[] @relation("TechnicalAnalysis_process")
+  commitment_process        Commitment[]        @relation("Commitment_process")
+  timelineEvent_process     TimelineEvent[]     @relation("TimelineEvent_process")
+
+  @@index([requestId])
+  @@index([responsibleId])
+}
+
+model Proposal {
+  id                    String          @id @default(cuid())
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  date                  DateTime        @default(now())
+  notes                 String          @default("")
+  processId             String
+  process               PurchaseProcess @relation("Proposal_process", fields: [processId], references: [id])
+  supplierId            String
+  supplier              Supplier        @relation("Proposal_supplier", fields: [supplierId], references: [id])
+  proposalItem_proposal ProposalItem[]  @relation("ProposalItem_proposal")
+
+  @@index([processId])
+  @@index([supplierId])
+}
+
+model ProposalItem {
+  id                             String              @id @default(cuid())
+  createdAt                      DateTime            @default(now())
+  updatedAt                      DateTime            @updatedAt
+  brand                          String
+  model                          String
+  manufacturer                   String
+  quantity                       Int
+  price                          Decimal             @db.Decimal(12, 2)
+  offeredDescription             String
+  manufacturerUrl                String              @default("")
+  proposalId                     String
+  proposal                       Proposal            @relation("ProposalItem_proposal", fields: [proposalId], references: [id])
+  requestItemId                  String
+  requestItem                    PurchaseRequestItem @relation("ProposalItem_requestItem", fields: [requestItemId], references: [id])
+  technicalAnalysis_proposalItem TechnicalAnalysis[] @relation("TechnicalAnalysis_proposalItem")
+  commitmentItem_proposalItem    CommitmentItem[]    @relation("CommitmentItem_proposalItem")
+
+  @@index([proposalId])
+  @@index([requestItemId])
+}
+
+model TechnicalAnalysis {
+  id                                 String                      @id @default(cuid())
+  createdAt                          DateTime                    @default(now())
+  updatedAt                          DateTime                    @updatedAt
+  status                             String                      @default("EM_ANALISE")
+  conclusion                         String?
+  notes                              String                      @default("")
+  concludedAt                        DateTime?
+  dataPolicy                         String                      @default("INSTITUTIONAL_ONLY")
+  processId                          String
+  process                            PurchaseProcess             @relation("TechnicalAnalysis_process", fields: [processId], references: [id])
+  proposalItemId                     String
+  proposalItem                       ProposalItem                @relation("TechnicalAnalysis_proposalItem", fields: [proposalItemId], references: [id])
+  specificationVersionId             String
+  specificationVersion               SpecificationVersion        @relation("TechnicalAnalysis_specificationVersion", fields: [specificationVersionId], references: [id])
+  technicianId                       String
+  technician                         User                        @relation("TechnicalAnalysis_technician", fields: [technicianId], references: [id])
+  analysisRequirementResult_analysis AnalysisRequirementResult[] @relation("AnalysisRequirementResult_analysis")
+
+  @@index([processId])
+  @@index([proposalItemId])
+  @@index([specificationVersionId])
+  @@index([technicianId])
+}
+
+model AnalysisRequirementResult {
+  id               String                   @id @default(cuid())
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  result           String                   @default("PENDENTE")
+  offered          String                   @default("")
+  reason           String                   @default("")
+  equivalenceNotes String                   @default("")
+  analysisId       String
+  analysis         TechnicalAnalysis        @relation("AnalysisRequirementResult_analysis", fields: [analysisId], references: [id])
+  requirementId    String
+  requirement      SpecificationRequirement @relation("AnalysisRequirementResult_requirement", fields: [requirementId], references: [id])
+
+  @@unique([analysisId, requirementId])
+  @@index([analysisId])
+  @@index([requirementId])
+}
+
+model Commitment {
+  id                             String                @id @default(cuid())
+  createdAt                      DateTime              @default(now())
+  updatedAt                      DateTime              @updatedAt
+  number                         String
+  year                           Int
+  date                           DateTime              @default(now())
+  status                         String                @default("EMITIDO")
+  supplierId                     String
+  supplier                       Supplier              @relation("Commitment_supplier", fields: [supplierId], references: [id])
+  processId                      String
+  process                        PurchaseProcess       @relation("Commitment_process", fields: [processId], references: [id])
+  requestId                      String
+  request                        PurchaseRequest       @relation("Commitment_request", fields: [requestId], references: [id])
+  commitmentItem_commitment      CommitmentItem[]      @relation("CommitmentItem_commitment")
+  technicalInspection_commitment TechnicalInspection[] @relation("TechnicalInspection_commitment")
+
+  @@unique([number, year])
+  @@index([supplierId])
+  @@index([processId])
+  @@index([requestId])
+}
+
+model CommitmentItem {
+  id                            String           @id @default(cuid())
+  createdAt                     DateTime         @default(now())
+  updatedAt                     DateTime         @updatedAt
+  quantity                      Int
+  value                         Decimal          @db.Decimal(12, 2)
+  commitmentId                  String
+  commitment                    Commitment       @relation("CommitmentItem_commitment", fields: [commitmentId], references: [id])
+  proposalItemId                String
+  proposalItem                  ProposalItem     @relation("CommitmentItem_proposalItem", fields: [proposalItemId], references: [id])
+  inspectionItem_commitmentItem InspectionItem[] @relation("InspectionItem_commitmentItem")
+
+  @@index([commitmentId])
+  @@index([proposalItemId])
+}
+
+model TechnicalInspection {
+  id                        String           @id @default(cuid())
+  createdAt                 DateTime         @default(now())
+  updatedAt                 DateTime         @updatedAt
+  date                      DateTime         @default(now())
+  result                    String           @default("PENDENTE")
+  notes                     String           @default("")
+  commitmentId              String
+  commitment                Commitment       @relation("TechnicalInspection_commitment", fields: [commitmentId], references: [id])
+  technicianId              String
+  technician                User             @relation("TechnicalInspection_technician", fields: [technicianId], references: [id])
+  inspectionItem_inspection InspectionItem[] @relation("InspectionItem_inspection")
+
+  @@index([commitmentId])
+  @@index([technicianId])
+}
+
+model InspectionItem {
+  id                      String              @id @default(cuid())
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  deliveredDescription    String
+  verifiedCharacteristics String
+  divergences             String
+  result                  String              @default("PENDENTE")
+  inspectionId            String
+  inspection              TechnicalInspection @relation("InspectionItem_inspection", fields: [inspectionId], references: [id])
+  commitmentItemId        String
+  commitmentItem          CommitmentItem      @relation("InspectionItem_commitmentItem", fields: [commitmentItemId], references: [id])
+
+  @@index([inspectionId])
+  @@index([commitmentItemId])
+}
+
+model TimelineEvent {
+  id          String           @id @default(cuid())
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  entityType  String
+  entityId    String
+  eventType   String
+  occurredAt  DateTime         @default(now())
+  title       String
+  description String
+  metadata    Json?
+  supplierId  String?
+  supplier    Supplier?        @relation("TimelineEvent_supplier", fields: [supplierId], references: [id])
+  userId      String
+  user        User             @relation("TimelineEvent_user", fields: [userId], references: [id])
+  processId   String?
+  process     PurchaseProcess? @relation("TimelineEvent_process", fields: [processId], references: [id])
+
+  @@index([supplierId])
+  @@index([userId])
+  @@index([processId])
+  @@index([entityType, entityId, occurredAt])
+}
+
+model DocumentReference {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  provider    String
+  externalId  String?
+  url         String
+  mimeType    String
+  description String
+  entityType  String
+  entityId    String
+  dataPolicy  String   @default("INSTITUTIONAL_ONLY")
+  createdById String
+  createdBy   User     @relation("DocumentReference_createdBy", fields: [createdById], references: [id])
+
+  @@index([createdById])
+  @@index([entityType, entityId])
+}
+
+model SystemEntry {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  name        String
+  description String
+  url         String
+  category    String
+  responsible String
+  environment String
+  notes       String   @default("")
+  favorite    Boolean  @default(false)
+}
+
+model AIConfiguration {
+  id                  String   @id @default(cuid())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  provider            String   @default("mock")
+  model               String   @default("retrieval-mock")
+  enabled             Boolean  @default(true)
+  encryptedCredential String?
+  settings            Json?
+  userId              String   @unique
+  user                User     @relation("AIConfiguration_user", fields: [userId], references: [id])
+}
+
+model AIConversation {
+  id                     String      @id @default(cuid())
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  title                  String
+  provider               String
+  model                  String
+  entityType             String?
+  entityId               String?
+  archived               Boolean     @default(false)
+  userId                 String
+  user                   User        @relation("AIConversation_user", fields: [userId], references: [id])
+  aIMessage_conversation AIMessage[] @relation("AIMessage_conversation")
+
+  @@index([userId])
+}
+
+model AIMessage {
+  id             String         @id @default(cuid())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  role           String
+  content        String
+  sources        Json?
+  conversationId String
+  conversation   AIConversation @relation("AIMessage_conversation", fields: [conversationId], references: [id])
+
+  @@index([conversationId])
+}
+
+model IntegrationConfiguration {
+  id                  String   @id @default(cuid())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  provider            String   @unique
+  mode                String   @default("MOCK")
+  enabled             Boolean  @default(false)
+  encryptedCredential String?
+  settings            Json?
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  sessionIp  String?
+  userId     String
+  user       User     @relation("AuditLog_user", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType, entityId, createdAt])
+}

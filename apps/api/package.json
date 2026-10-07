@@ -1,0 +1,37 @@
+{
+  "name": "@hub/api",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "tsc && concurrently \"tsc --watch\" \"node --watch dist/main.js\"",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.seed.json",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "11.2.7",
+    "@nestjs/core": "11.2.7",
+    "@nestjs/platform-express": "11.2.7",
+    "@nestjs/jwt": "11.0.1",
+    "@prisma/client": "6.19.3",
+    "@hub/types": "workspace:*",
+    "bcryptjs": "3.0.3",
+    "cookie-parser": "1.4.7",
+    "dotenv": "17.2.3",
+    "express": "5.2.1",
+    "express-rate-limit": "8.7.1",
+    "helmet": "8.3.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "1.4.9",
+    "@types/express": "5.0.5",
+    "@types/node": "24.10.1",
+    "prisma": "6.19.3",
+    "tsx": "4.20.6"
+  }
+}

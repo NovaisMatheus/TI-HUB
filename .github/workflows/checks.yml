@@ -1,0 +1,44 @@
+name: Checks
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: hub
+          POSTGRES_PASSWORD: hub_dev_only
+          POSTGRES_DB: ugb_hub
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U hub -d ugb_hub"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm setup:local
+      - run: pnpm db:generate
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - run: |
+          node apps/api/dist/main.js > /tmp/hub-api.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3001/api/auth/me || true)
+            if [ "$code" = "401" ]; then break; fi
+            sleep 1
+          done
+          pnpm test:smoke
+          pnpm test:chain
+      - run: pnpm audit --prod

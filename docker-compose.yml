@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: hub
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hub_dev_only}
+      POSTGRES_DB: ugb_hub
+    ports: ['127.0.0.1:5432:5432']
+    volumes: ['postgres_data:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hub -d ugb_hub']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://hub:${POSTGRES_PASSWORD:-hub_dev_only}@postgres:5432/ugb_hub?schema=public
+    ports: ['127.0.0.1:3001:3001']
+    depends_on:
+      postgres: { condition: service_healthy }
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile }
+    ports: ['127.0.0.1:5173:80']
+    depends_on: [api]
+volumes:
+  postgres_data:

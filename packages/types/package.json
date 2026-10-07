@@ -1,0 +1,9 @@
+{
+  "name": "@hub/types",
+  "private": true,
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/index.d.ts"
+  },
+  "types": "./src/index.d.ts"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "ugb-ti-hub",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"pnpm --filter @hub/api dev\" \"pnpm --filter @hub/web dev\"",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint apps packages scripts tests",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "db:generate": "node scripts/database.mjs generate",
+    "db:migrate": "node scripts/database.mjs migrate",
+    "db:seed": "pnpm --filter @hub/api db:seed",
+    "db:local": "node scripts/local-postgres.mjs",
+    "db:status": "node scripts/database.mjs status",
+    "test:smoke": "node scripts/smoke.mjs",
+    "test:chain": "node scripts/chain-smoke.mjs",
+    "setup:local": "node scripts/setup-local.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "typescript-eslint": "8.48.1",
+    "eslint": "9.39.1",
+    "eslint-plugin-react-hooks": "7.0.1",
+    "prettier": "3.7.4",
+    "concurrently": "9.2.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4",
+    "embedded-postgres": "18.4.0-beta.17"
+  }
+}
