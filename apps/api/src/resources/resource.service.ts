@@ -45,7 +45,11 @@ export class ResourceService {
       pageSize = Math.min(100, Math.max(1, Math.floor(Number(query.pageSize) || 15)));
     const q = (query.q ?? '').slice(0, 200);
     const where: Record<string, unknown> = q
-      ? { OR: config.search.map((field) => ({ [field]: { contains: q, mode: 'insensitive' } })) }
+      ? {
+          OR: [...new Set([...config.search, config.title])].map((field) => ({
+            [field]: { contains: q, mode: 'insensitive' },
+          })),
+        }
       : {};
     if (name === 'documents')
       where.entityType = { in: Object.keys(catalog).filter((key) => canAccess(key, user)) };

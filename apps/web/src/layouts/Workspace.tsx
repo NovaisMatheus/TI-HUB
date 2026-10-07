@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -16,12 +16,11 @@ import {
   ChevronDown,
   LogOut,
   Network,
-  Sun,
-  Moon,
 } from 'lucide-react';
 import { Button } from '@hub/ui';
 import type { SessionUser } from '@hub/types';
 import { CommandPalette } from '../components/CommandPalette';
+import { ThemeControl } from '../components/ThemeControl';
 import { send } from '../services/api';
 const navigation = [
   { path: '/', label: 'Início', icon: Home },
@@ -46,28 +45,9 @@ export function Workspace({
   setSearchOpen: (v: boolean) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false),
-    [theme, setTheme] = useState(user.theme ?? localStorage.getItem('hub-theme') ?? 'system'),
+    [query, setQuery] = useState(''),
     [themeError, setThemeError] = useState('');
   const navigate = useNavigate();
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = () =>
-      (document.documentElement.dataset.theme =
-        theme === 'system' ? (media.matches ? 'dark' : 'light') : theme);
-    apply();
-    media.addEventListener('change', apply);
-    return () => media.removeEventListener('change', apply);
-  }, [theme]);
-  async function changeTheme(value: string) {
-    setTheme(value);
-    localStorage.setItem('hub-theme', value);
-    try {
-      await send('profile', { theme: value }, 'PATCH');
-      setThemeError('');
-    } catch {
-      setThemeError('Tema aplicado localmente; falha ao salvar no perfil.');
-    }
-  }
   return (
     <div className={`workspace ${collapsed ? 'sidebar-collapsed' : ''}`}>
       <aside className="sidebar">
@@ -156,24 +136,26 @@ export function Workspace({
             Workspace <span>/</span> <strong>UGB TI Hub</strong>
           </div>
           <div>
-            <button className="global-search" onClick={() => setSearchOpen(true)}>
-              <Search size={16} />
-              <span>Pesquisar no Hub</span>
+            <form
+              className="global-search"
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setSearchOpen(true);
+              }}
+            >
+              <input
+                aria-label="Pesquisa global"
+                placeholder="Pesquisar no Hub…"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+              <button type="submit" aria-label="Pesquisar" title="Pesquisar (Ctrl+K)">
+                <Search size={16} />
+              </button>
               <kbd>Ctrl K</kbd>
-            </button>
-            <div className="theme-control">
-              <Sun size={15} />
-              <select
-                aria-label="Tema da interface"
-                value={theme}
-                onChange={(e) => changeTheme(e.target.value)}
-              >
-                <option value="light">Claro</option>
-                <option value="dark">Escuro</option>
-                <option value="system">Sistema</option>
-              </select>
-              {theme === 'dark' && <Moon size={14} />}
-            </div>
+            </form>
+            <ThemeControl key={user.id} user={user} />
             <Button
               variant="ghost"
               aria-label="Sair"
@@ -195,7 +177,7 @@ export function Workspace({
           <Outlet />
         </main>
       </div>
-      <CommandPalette open={searchOpen} setOpen={setSearchOpen} />
+      <CommandPalette open={searchOpen} setOpen={setSearchOpen} query={query} setQuery={setQuery} />
     </div>
   );
 }

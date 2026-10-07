@@ -16,17 +16,19 @@
     "db:status": "node scripts/database.mjs status",
     "test:smoke": "node scripts/smoke.mjs",
     "test:chain": "node scripts/chain-smoke.mjs",
+    "test:interface": "node scripts/interface-smoke.mjs",
     "setup:local": "node scripts/setup-local.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",
-    "typescript-eslint": "8.48.1",
+    "concurrently": "9.2.1",
+    "embedded-postgres": "18.4.0-beta.17",
     "eslint": "9.39.1",
     "eslint-plugin-react-hooks": "7.0.1",
+    "jsdom": "^30.1.2",
     "prettier": "3.7.4",
-    "concurrently": "9.2.1",
     "typescript": "5.9.3",
-    "vitest": "3.2.4",
-    "embedded-postgres": "18.4.0-beta.17"
+    "typescript-eslint": "8.48.1",
+    "vitest": "3.2.4"
   }
 }

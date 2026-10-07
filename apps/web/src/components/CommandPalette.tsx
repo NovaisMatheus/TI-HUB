@@ -8,12 +8,15 @@ import { api } from '../services/api';
 export function CommandPalette({
   open,
   setOpen,
+  query,
+  setQuery,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
+  query: string;
+  setQuery: (v: string) => void;
 }) {
-  const [query, setQuery] = useState(''),
-    [debounced, setDebounced] = useState('');
+  const [debounced, setDebounced] = useState('');
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -49,7 +52,9 @@ export function CommandPalette({
         <kbd>ESC</kbd>
       </div>
       <div className="palette-results">
-        {results.isLoading ? (
+        {query.trim().length < 3 ? (
+          <p>Digite pelo menos 3 caracteres para pesquisar nos módulos autorizados.</p>
+        ) : query !== debounced || results.isFetching ? (
           <p>Pesquisando…</p>
         ) : results.isError ? (
           <p role="alert">Não foi possível pesquisar.</p>
@@ -70,11 +75,7 @@ export function CommandPalette({
             </button>
           ))
         ) : (
-          <p>
-            {query.length > 2
-              ? 'Nenhum registro encontrado.'
-              : 'Encontre informações em todos os módulos autorizados.'}
-          </p>
+          <p>Nenhum registro encontrado.</p>
         )}
       </div>
     </Dialog>
