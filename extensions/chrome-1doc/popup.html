@@ -11,7 +11,18 @@
       <h1>TI Hub <small>Coletor 1Doc</small></h1>
     </header>
     <p>Abra o documento e carregue os despachos que deseja importar.</p>
-    <button id="collect" type="button">Coletar e abrir demanda</button>
+    <button id="collect" type="button">Coletar documento</button>
+    <section id="preview" hidden>
+      <p id="summary"></p>
+      <label
+        >Classificação no Hub<select id="kind">
+          <option value="SUPORTE">Suporte</option>
+          <option value="AQUISICAO">Aquisição</option>
+          <option value="OUTRA">Outra</option>
+        </select></label
+      >
+      <button id="save" type="button">Salvar demanda</button>
+    </section>
     <p id="status" role="status" aria-live="polite"></p>
     <a id="last" hidden target="_blank" rel="noopener">Abrir última demanda</a>
     <details id="config">

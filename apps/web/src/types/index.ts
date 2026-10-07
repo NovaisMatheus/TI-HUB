@@ -47,6 +47,7 @@ export function display(value: unknown): string {
 }
 export const labels: Record<string, string> = {
   documentType: 'Tipo no 1Doc',
+  kind: 'Classificação no Hub',
   requester: 'Solicitante',
   sourceStatus: 'Situação no 1Doc',
   hostname: 'Equipamento',

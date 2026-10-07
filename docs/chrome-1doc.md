@@ -1,6 +1,8 @@
 # Extensão Chrome · Coletor 1Doc
 
-A extensão importa o documento aberto no 1Doc ao clicar em **Coletar e abrir demanda**. Abre a demanda criada ou atualizada no TI Hub. Nova coleta do mesmo ID, no mesmo município/domínio, atualiza a demanda existente.
+A extensão 1.1 inclui um botão flutuante **UGB · TI Hub** na página de leitura do 1Doc. Clique nele, depois em **Coletar documento**, revise o resumo e selecione **Suporte**, **Aquisição** ou **Outra**. O botão **Salvar demanda** ou **Atualizar demanda** confirma o envio e abre o registro no Hub. O popup na barra do Chrome também oferece esse fluxo. A coleta, sozinha, não salva nada.
+
+O tipo de origem permanece intacto: um Memorando pode ser classificado como Aquisição no Hub sem perder seu tipo original. A classificação pode ser alterada na gestão da demanda e filtrada na listagem. Nova coleta carrega a classificação existente; clientes antigos que não enviam classificação não a sobrescrevem. Marcar Aquisição organiza a demanda e não cria automaticamente um processo de compra, requisição ou empenho.
 
 ## Instalação local
 
@@ -9,9 +11,11 @@ A extensão importa o documento aberto no 1Doc ao clicar em **Coletar e abrir de
 3. Fixe **UGB TI Hub · Coletor 1Doc** na barra do Chrome.
 4. No TI Hub, entre com um perfil com permissão de escrita em demandas e abra **Meu perfil → Extensão Chrome → Gerar chave para extensão**.
 5. Na extensão, abra **Conexão com o Hub**, informe `http://localhost:5173` (ou o endereço HTTPS do Hub) e cole a chave. Clique em **Salvar e verificar conexão**.
-6. Abra um documento no 1Doc, carregue os despachos desejados e clique em **Coletar e abrir demanda**.
+6. Recarregue a página do 1Doc, carregue os despachos desejados e use o botão flutuante **UGB · TI Hub → Coletar documento → Salvar/Atualizar demanda**.
 
-O Hub e sua API devem estar funcionando. Na produção, o frontend deve encaminhar `/api` para o backend. A extensão solicita acesso ao domínio HTTPS do Hub configurado; a leitura do 1Doc usa a permissão temporária da aba em que foi acionada. Não coleta páginas em segundo plano.
+Para atualizar uma instalação anterior, substitua os arquivos pela versão 1.1 e clique em **Recarregar** na extensão em `chrome://extensions`. Confira o acesso aos sites do 1Doc e recarregue a página do documento. As configurações do Hub e a chave permanecem se você atualizar a mesma extensão.
+
+O Hub e sua API devem estar funcionando. Na produção, o frontend deve encaminhar `/api` para o backend. A extensão solicita acesso ao domínio HTTPS do Hub configurado e registra um content script nos sites `https://*.1doc.com.br/*` para exibir o botão flutuante. Os dados só são coletados e enviados após cliques explícitos. A leitura pelo popup também usa acesso temporário à aba ativa.
 
 ## Dados preservados
 
@@ -34,7 +38,7 @@ No Hub, **Demandas** oferece busca, detalhes, conteúdo original, dados coletado
 
 ## Chave e permissões
 
-A chave da extensão é aleatória, vale por 30 dias, pertence ao usuário e pode ser revogada em **Meu perfil**. O servidor guarda somente seu hash. Ela permite apenas `GET /api/extension/session` e `POST /api/imports/1doc`, exigindo as permissões atuais `demands.read` e `demands.write`. Não permite acessar outros endpoints ou gerar novas chaves.
+A chave da extensão é aleatória, vale por 30 dias, pertence ao usuário e pode ser revogada em **Meu perfil**. O servidor guarda somente seu hash. Ela permite apenas `GET /api/extension/session`, `GET /api/extension/demand` e `POST /api/imports/1doc`, exigindo as permissões atuais `demands.read` e `demands.write`. Não permite acessar outros endpoints ou gerar novas chaves.
 
 O popup guarda a chave no armazenamento local do Chrome e não guarda o HTML nem o payload coletado. **Desconectar** remove a chave daquele navegador; **Revogar** no Hub invalida seu uso no servidor. Cookies, scripts, inputs e rascunhos não são coletados. O endereço de origem retém apenas parâmetros de identificação do documento.
 

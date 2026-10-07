@@ -39,6 +39,12 @@ describe('Coletor Chrome 1Doc', () => {
       'Circular',
     );
   });
+  it('preserva Memorando quando a demanda é classificada como aquisição', () => {
+    const payload = collect(fixture.replaceAll('Chamado técnico', 'Memorando'));
+    expect(oneDocImportSchema.parse({ ...payload, kind: 'AQUISICAO' }).documentType).toBe(
+      'Memorando',
+    );
+  });
   it('mantém links/imagens e não coleta tokens, scripts, inputs ou rascunhos', () => {
     const result = collect();
     expect(result.attachments).toHaveLength(3);

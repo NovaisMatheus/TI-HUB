@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Post, Req, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Req, Param, Query } from '@nestjs/common';
+import { z } from 'zod';
 import { createHash, randomBytes } from 'node:crypto';
 import { AuthRequest, ExtensionAllowed, Permission } from '../auth/auth.guard';
 import { PrismaService } from '../common/prisma.service';
@@ -51,6 +52,31 @@ export class DemandController {
 
   @ExtensionAllowed()
   @Permission('demands.write')
+  @Get('extension/demand')
+  async lookup(@Query() query: unknown) {
+    const identity = validate(
+      z
+        .object({
+          sourceUrl: oneDocImportSchema.shape.sourceUrl,
+          sourceId: oneDocImportSchema.shape.sourceId,
+        })
+        .strict(),
+      query,
+    );
+    const demand = await this.db.demand.findUnique({
+      where: {
+        sourceHost_sourceId: {
+          sourceHost: new URL(identity.sourceUrl).hostname,
+          sourceId: identity.sourceId,
+        },
+      },
+      select: { id: true, kind: true, title: true },
+    });
+    return { exists: !!demand, demand };
+  }
+
+  @ExtensionAllowed()
+  @Permission('demands.write')
   @Post('imports/1doc')
   async collect(@Body() body: unknown, @Req() req: AuthRequest) {
     const payload = validate(oneDocImportSchema, body);
@@ -73,6 +99,7 @@ export class DemandController {
             sourceHost_sourceId: { sourceHost: sourceUrl.hostname, sourceId: payload.sourceId },
           },
           create: {
+            kind: payload.kind ?? 'SUPORTE',
             sourceHost: sourceUrl.hostname,
             sourceId: payload.sourceId,
             sourceUrl: sourceUrl.href,
@@ -86,6 +113,7 @@ export class DemandController {
             metadata: json(safe),
           },
           update: {
+            ...(payload.kind ? { kind: payload.kind } : {}),
             sourceUrl: sourceUrl.href,
             number: payload.number,
             documentType: payload.documentType,

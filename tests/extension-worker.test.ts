@@ -40,6 +40,19 @@ function worker(href = '/demands/qa-demand') {
 }
 const sender = { id: 'qa-extension', url: 'chrome-extension://qa-extension/popup.html' };
 describe('Service worker da extensão', () => {
+  it('aceita o botão flutuante na aba principal do 1Doc e recusa iframes', async () => {
+    const test = worker();
+    const content = {
+      id: 'qa-extension',
+      url: 'https://tenant.1doc.com.br/?pg=doc/ver',
+      tab: { id: 7 },
+      frameId: 0,
+    };
+    expect((await test.message(content)).ok).toBe(true);
+    const iframe = worker();
+    expect(iframe.ignored({ ...content, frameId: 1 })).toBeUndefined();
+    expect(iframe.fetch).not.toHaveBeenCalled();
+  });
   it('conclui importação autenticada e abre a demanda retornada no Hub', async () => {
     const test = worker();
     expect((await test.message(sender)).ok).toBe(true);

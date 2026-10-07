@@ -1,4 +1,5 @@
 const get = (id) => document.getElementById(id);
+let captured;
 const status = (message) => {
   get('status').textContent = message;
 };
@@ -50,6 +51,8 @@ get('disconnect').addEventListener('click', async () => {
 });
 get('collect').addEventListener('click', async () => {
   get('collect').disabled = true;
+  captured = undefined;
+  get('preview').hidden = true;
   status('Coletando documento e despachos…');
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -58,17 +61,39 @@ get('collect').addEventListener('click', async () => {
       target: { tabId: tab.id },
       func: () => globalThis.ugbCollectOneDoc(),
     });
-    status(
-      `${payload.documentType} ${payload.number}\n${payload.dispatches.length} despachos carregados. Enviando ao Hub…`,
-    );
-    const result = await chrome.runtime.sendMessage({ type: 'IMPORT_1DOC', payload });
+    const result = await chrome.runtime.sendMessage({ type: 'LOOKUP_1DOC', payload });
     if (!result.ok) throw new Error(result.error);
-    status(
-      `Demanda ${result.data.created ? 'criada' : 'atualizada'}. ${result.data.dispatches} despachos preservados.\n${payload.warnings.join('\n')}`,
-    );
+    captured = payload;
+    get('summary').textContent =
+      `${payload.documentType} ${payload.number}\n${payload.title}\n${payload.dispatches.length} despachos carregados.`;
+    get('kind').value = result.data.demand?.kind || 'SUPORTE';
+    get('save').textContent = result.data.exists ? 'Atualizar demanda' : 'Salvar demanda';
+    get('preview').hidden = false;
+    status(payload.warnings.join('\n'));
   } catch (error) {
     status(error.message || 'Falha ao coletar.');
   } finally {
+    get('collect').disabled = false;
+  }
+});
+get('save').addEventListener('click', async () => {
+  if (!captured) return;
+  get('save').disabled = true;
+  get('collect').disabled = true;
+  try {
+    const result = await chrome.runtime.sendMessage({
+      type: 'IMPORT_1DOC',
+      payload: { ...captured, kind: get('kind').value },
+    });
+    if (!result.ok) throw new Error(result.error);
+    status(
+      `Demanda ${result.data.created ? 'salva' : 'atualizada'}. ${result.data.dispatches} despachos preservados.`,
+    );
+    get('save').textContent = 'Atualizar demanda';
+  } catch (error) {
+    status(error.message || 'Falha ao salvar.');
+  } finally {
+    get('save').disabled = false;
     get('collect').disabled = false;
   }
 });

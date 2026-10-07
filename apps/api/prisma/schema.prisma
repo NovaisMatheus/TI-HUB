@@ -35,6 +35,37 @@ model User {
   aIConversation_user                AIConversation[]          @relation("AIConversation_user")
   auditLog_user                      AuditLog[]                @relation("AuditLog_user")
   extensionCredentials               ExtensionCredential[]
+  teamMessages                       TeamMessage[]
+  googleChat                         GoogleChatConnection?
+}
+
+model TeamMessage {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  text      String
+  requestId String   @unique
+  @@index([createdAt])
+}
+
+model GoogleChatConnection {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+}
+
+model GoogleOAuthAttempt {
+  id         String   @id @default(cuid())
+  stateHash  String   @unique
+  userId     String
+  verifier   String
+  expiresAt  DateTime
 }
 
 model ExtensionCredential {
@@ -62,6 +93,7 @@ model Demand {
   requester    String
   sourceStatus String
   status       String   @default("ABERTA")
+  kind         String   @default("SUPORTE")
   notes        String   @default("")
   dataPolicy   String   @default("NO_AI")
   capturedAt   DateTime
@@ -70,6 +102,7 @@ model Demand {
   snapshots    DemandSnapshot[]
   @@unique([sourceHost, sourceId])
   @@index([status])
+  @@index([kind])
 }
 
 model DemandDispatch {

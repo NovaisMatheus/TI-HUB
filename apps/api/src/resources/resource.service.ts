@@ -54,6 +54,7 @@ export class ResourceService {
     if (name === 'documents')
       where.entityType = { in: Object.keys(catalog).filter((key) => canAccess(key, user)) };
     if (query.status && config.fields.some((f) => f.name === 'status')) where.status = query.status;
+    if (name === 'demands' && query.kind) where.kind = query.kind;
     if (q && name === 'equipment')
       (where.OR as unknown[]).push(
         { equipmentNetwork_equipment: { is: { ip: { contains: q } } } },

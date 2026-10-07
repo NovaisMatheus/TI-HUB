@@ -21,15 +21,16 @@ export function ResourceList({
   const [params] = useSearchParams();
   const [query, setQuery] = useState(''),
     [status, setStatus] = useState(params.get('status') ?? ''),
+    [kind, setKind] = useState(params.get('kind') ?? ''),
     [sort, setSort] = useState('createdAt'),
     [page, setPage] = useState(1),
     [create, setCreate] = useState(false);
   const navigate = useNavigate();
   const result = useQuery({
-    queryKey: ['records', name, query, status, sort, page],
+    queryKey: ['records', name, query, status, kind, sort, page],
     queryFn: () =>
       api<Page<Entity>>(
-        `records/${name}?q=${encodeURIComponent(query)}&status=${status}&sort=${sort}&page=${page}`,
+        `records/${name}?q=${encodeURIComponent(query)}&status=${status}&kind=${kind}&sort=${sort}&page=${page}`,
       ),
     enabled: !!config,
   });
@@ -57,6 +58,9 @@ export function ResourceList({
         </p>
       )}
       <div className="collection-tabs">
+        {name === 'acquisitions' && catalog.demands && (
+          <Link to="/demands?kind=AQUISICAO">Demandas de aquisição</Link>
+        )}
         {name === 'equipment' ? (
           <>
             <span className="selected">Inventário</span>
@@ -129,6 +133,21 @@ export function ResourceList({
                     {v.replaceAll('_', ' ')}
                   </option>
                 ))}
+            </select>
+          )}
+          {name === 'demands' && (
+            <select
+              aria-label="Filtrar classificação"
+              value={kind}
+              onChange={(e) => {
+                setKind(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Todas as classificações</option>
+              <option value="SUPORTE">Suporte</option>
+              <option value="AQUISICAO">Aquisição</option>
+              <option value="OUTRA">Outra</option>
             </select>
           )}
           <select aria-label="Ordenação" value={sort} onChange={(e) => setSort(e.target.value)}>

@@ -50,8 +50,9 @@ export const catalog: Record<string, Resource> = {
     permission: 'demands',
     title: 'title',
     search: ['title', 'number', 'documentType', 'description', 'requester', 'sourceStatus'],
-    columns: ['number', 'documentType', 'title', 'requester', 'status', 'sourceStatus'],
+    columns: ['number', 'documentType', 'kind', 'title', 'requester', 'status', 'sourceStatus'],
     fields: [
+      select('kind', 'Classificação no Hub', ['SUPORTE', 'AQUISICAO', 'OUTRA']),
       select('status', 'Situação no Hub', ['ABERTA', 'EM_ANDAMENTO', 'AGUARDANDO', 'CONCLUIDA']),
       text('notes', 'Observações internas', true),
     ],

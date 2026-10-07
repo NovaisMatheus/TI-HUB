@@ -59,7 +59,7 @@ it('exibe cada despacho e salva a gestão interna sem alterar a classificação 
   await waitFor(() =>
     expect(send).toHaveBeenCalledWith(
       'records/demands/qa',
-      { status: 'EM_ANDAMENTO', notes: 'Aguardando retorno' },
+      { status: 'EM_ANDAMENTO', notes: 'Aguardando retorno', kind: 'SUPORTE' },
       'PATCH',
     ),
   );

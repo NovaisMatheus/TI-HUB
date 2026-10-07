@@ -91,6 +91,7 @@ pnpm test:smoke
 pnpm test:chain
 pnpm test:interface
 pnpm test:1doc
+pnpm test:chat
 ```
 
 Os smoke tests criam registros fictícios, versões e eventos de auditoria no banco de desenvolvimento. O teste de cadeia cria um processo completo. Execute apenas em uma base descartável de desenvolvimento. Testes unitários não dependem do banco.

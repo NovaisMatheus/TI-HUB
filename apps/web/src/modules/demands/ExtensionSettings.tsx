@@ -17,7 +17,7 @@ export function ExtensionSettings() {
       <h2>Extensão Chrome · Coletor 1Doc</h2>
       <p>
         Na extensão, informe o endereço deste Hub e uma chave gerada abaixo. A chave vale por 30
-        dias e permite somente verificar a conexão e importar demandas.
+        dias e permite verificar a conexão, localizar o documento e salvar ou atualizar demandas.
       </p>
       <Button
         disabled={busy}

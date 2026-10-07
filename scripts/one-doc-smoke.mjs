@@ -81,7 +81,7 @@ try {
   assert.equal(initial.dispatches, 2);
   await call(`records/demands/${initial.id}`, {
     cookie,
-    data: { status: 'EM_ANDAMENTO', notes: 'Notas internas preservadas' },
+    data: { status: 'EM_ANDAMENTO', notes: 'Notas internas preservadas', kind: 'AQUISICAO' },
     method: 'PATCH',
   });
   const partial = {
@@ -96,6 +96,20 @@ try {
   const detail = (await call(`records/demands/${initial.id}`, { cookie: reader })).body;
   assert.equal(detail.status, 'EM_ANDAMENTO');
   assert.equal(detail.notes, 'Notas internas preservadas');
+  assert.equal(detail.kind, 'AQUISICAO');
+  const lookup = (
+    await call(
+      `extension/demand?sourceUrl=${encodeURIComponent(payload.sourceUrl)}&sourceId=${payload.sourceId}`,
+      { token: key.token },
+    )
+  ).body;
+  assert.equal(lookup.exists, true);
+  assert.equal(lookup.demand.kind, 'AQUISICAO');
+  assert.ok(
+    (await call('records/demands?kind=AQUISICAO&pageSize=100', { cookie: reader })).body.items.some(
+      (row) => row.id === initial.id,
+    ),
+  );
   assert.equal(detail.documentType, 'Chamado técnico');
   assert.ok(detail.dispatches[0].content.includes('autorização'));
   assert.ok(detail.dispatches[0].metadata.attachments.length);

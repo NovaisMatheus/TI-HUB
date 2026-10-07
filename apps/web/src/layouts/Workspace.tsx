@@ -17,11 +17,13 @@ import {
   LogOut,
   Network,
   Inbox,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@hub/ui';
 import type { SessionUser } from '@hub/types';
 import { CommandPalette } from '../components/CommandPalette';
 import { ThemeControl } from '../components/ThemeControl';
+import { ChatPanel } from '../modules/chat/ChatPanel';
 import { send } from '../services/api';
 const navigation = [
   { path: '/', label: 'Início', icon: Home },
@@ -49,9 +51,15 @@ export function Workspace({
   const [collapsed, setCollapsed] = useState(false),
     [query, setQuery] = useState(''),
     [themeError, setThemeError] = useState('');
+  const [chatOpen, setChatOpen] = useState(
+    () => window.innerWidth >= 1100 || new URLSearchParams(location.search).has('chat'),
+  );
+  const canChat = user.permissions.includes('chat.read');
   const navigate = useNavigate();
   return (
-    <div className={`workspace ${collapsed ? 'sidebar-collapsed' : ''}`}>
+    <div
+      className={`workspace ${collapsed ? 'sidebar-collapsed' : ''} ${canChat && chatOpen ? 'chat-open' : ''}`}
+    >
       <aside className="sidebar">
         <Link className="brand" to="/">
           <span className="brand-icon">
@@ -160,6 +168,17 @@ export function Workspace({
               <kbd>Ctrl K</kbd>
             </form>
             <ThemeControl key={user.id} user={user} />
+            {canChat && (
+              <Button
+                variant="ghost"
+                aria-label={chatOpen ? 'Recolher chat' : 'Abrir chat'}
+                aria-expanded={chatOpen}
+                aria-controls="hub-chat"
+                onClick={() => setChatOpen((value) => !value)}
+              >
+                <MessageSquare size={18} />
+              </Button>
+            )}
             <Button
               variant="ghost"
               aria-label="Sair"
@@ -182,6 +201,7 @@ export function Workspace({
         </main>
       </div>
       <CommandPalette open={searchOpen} setOpen={setSearchOpen} query={query} setQuery={setQuery} />
+      {canChat && <ChatPanel key={user.id} user={user} open={chatOpen} setOpen={setChatOpen} />}
     </div>
   );
 }

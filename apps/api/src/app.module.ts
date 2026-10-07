@@ -12,11 +12,13 @@ import { SearchService } from './search/search.service';
 import { RecordHooks } from './resources/record-hooks';
 import { ConnectionService } from './equipment/connection.service';
 import { DemandController } from './demands/demand.controller';
+import { ChatController } from './chat/chat.controller';
+import { GoogleChatService } from './chat/google-chat.service';
 @Module({
   imports: [
     JwtModule.register({ secret: process.env.JWT_SECRET, signOptions: { expiresIn: '8h' } }),
   ],
-  controllers: [AuthController, ResourceController, DemandController],
+  controllers: [AuthController, ResourceController, DemandController, ChatController],
   providers: [
     PrismaService,
     AuthService,
@@ -25,6 +27,7 @@ import { DemandController } from './demands/demand.controller';
     WorkflowService,
     SearchService,
     ConnectionService,
+    GoogleChatService,
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
 })

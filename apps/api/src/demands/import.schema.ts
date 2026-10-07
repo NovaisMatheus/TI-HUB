@@ -33,6 +33,7 @@ const entry = z
   .strict();
 export const oneDocImportSchema = z
   .object({
+    kind: z.enum(['SUPORTE', 'AQUISICAO', 'OUTRA']).optional(),
     collectorVersion: z.literal('1.0.0'),
     source: z.literal('1doc'),
     sourceUrl: link.refine(

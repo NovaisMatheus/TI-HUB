@@ -44,3 +44,14 @@ A ferramenta de navegador rejeitou a navegação nesta revisão por política au
 - TypeScript, ESLint, build e auditoria de produção aprovados.
 
 O Chrome instalado e uma sessão autenticada real do 1Doc não foram controlados ou testados nesta etapa. A extensão é entregue para instalação local, sem publicação na Web Store. O coletor suporta a estrutura interna do exemplo; conteúdo não carregado e outros layouts precisam de validação em uso real. A captura de anexos preserva links/metadados, não os arquivos binários.
+
+## Chat lateral e extensão 1.1
+
+- Chat à direita com conversa persistente da equipe, paginação, atualização a cada cinco segundos, recolhimento e preservação de rascunho após erro.
+- Integração Google implementada com OAuth individual, estado de uso único vinculado ao navegador, PKCE, tokens criptografados e leitura/envio nos espaços autorizados. Credenciais Google ausentes: conexão real não ativada, interface informa configuração pendente.
+- Extensão 1.1 adiciona botão flutuante no 1Doc, resumo antes do envio e botões distintos Salvar/Atualizar; mesma UX no popup da barra. Memorando mantém tipo de origem e pode receber classificação Aquisição. A coleta sem classificação não sobrescreve a classificação existente.
+- 36 testes automatizados aprovados: fluxo do botão flutuante em DOM simulado, remetente da extensão e recusa de iframes, classificação de Memorando, chat e retries, OAuth/criptografia com Google simulado e testes anteriores.
+- `pnpm test:1doc` validou atualização, retenção de classificação Aquisição, filtro e localização pela chave. `pnpm test:chat` validou persistência de mensagem, compartilhamento entre usuários, envio idempotente, bloqueio de escrita pelo perfil Consulta e retorno OAuth inválido recusado, através do proxy do frontend.
+- Quatro migrations aplicadas; TypeScript, ESLint, build e auditoria de produção aprovados.
+
+A aparência dos novos painéis e a extensão instalada ainda não foram verificadas em navegador real, respeitando o bloqueio da ferramenta. Conta Google e chamadas externas reais também não foram verificadas; consulte `google-chat.md` para configuração.

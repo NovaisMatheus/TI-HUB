@@ -72,7 +72,7 @@ export function DemandDetail({ id, user }: { id: string; user: SessionUser }) {
     try {
       await send(
         `records/demands/${id}`,
-        { status: form.get('status'), notes: form.get('notes') },
+        { status: form.get('status'), notes: form.get('notes'), kind: form.get('kind') },
         'PATCH',
       );
       await client.invalidateQueries({ queryKey: ['record', 'demands', id] });
@@ -115,6 +115,14 @@ export function DemandDetail({ id, user }: { id: string; user: SessionUser }) {
         <p>O tipo e a situação do 1Doc são preservados. A situação abaixo é interna ao Hub.</p>
         {user.permissions.includes('demands.write') ? (
           <form onSubmit={save} className="demand-form">
+            <label>
+              Classificação no Hub
+              <select name="kind" defaultValue={String(row.kind ?? 'SUPORTE')}>
+                <option value="SUPORTE">Suporte</option>
+                <option value="AQUISICAO">Aquisição</option>
+                <option value="OUTRA">Outra</option>
+              </select>
+            </label>
             <label>
               Situação no Hub
               <select name="status" defaultValue={String(row.status)}>
