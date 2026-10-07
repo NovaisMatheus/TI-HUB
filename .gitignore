@@ -7,3 +7,4 @@ coverage/
 *.log
 apps/web/public/downloads/ti-hub-rede.cer
 apps/web/public/downloads/instalar-acesso-ti-hub.ps1
+apps/web/public/downloads/configurador-https-ti-hub.zip

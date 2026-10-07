@@ -126,12 +126,16 @@ export function Profile({ user }: { user: SessionUser }) {
       <section className="detail-section">
         <h2>Acesso HTTPS na rede</h2>
         <p>
-          Nesta instalação, baixe o configurador e execute como administrador em cada PC. Ele
-          instala o certificado de confiança do Hub e o endereço interno. Reinicie o navegador
-          depois da instalação.
+          Nesta instalação, baixe e extraia o ZIP do configurador. Execute o script extraído em um
+          PowerShell aberto como administrador em cada PC. Ele instala o certificado de confiança do
+          Hub e o endereço interno. Reinicie o navegador depois da instalação.
         </p>
-        <a className="button button-outline" href="/downloads/instalar-acesso-ti-hub.ps1" download>
-          Baixar configurador HTTPS deste PC
+        <a
+          className="button button-outline"
+          href="/downloads/configurador-https-ti-hub.zip"
+          download="configurador-https-ti-hub.zip"
+        >
+          Baixar configurador HTTPS (ZIP)
         </a>
         <p>
           Endereço HTTPS:{' '}

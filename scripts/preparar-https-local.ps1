@@ -10,6 +10,7 @@ $userSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 if ($LASTEXITCODE -ne 0) { throw 'Não foi possível proteger a pasta dos certificados.' }
 $configPath = Join-Path $tlsPath 'config.json'
 if (Test-Path -LiteralPath $configPath) {
+  & (Join-Path $PSScriptRoot 'package-https-installer.ps1')
   Write-Output 'HTTPS já preparado. Certificados existentes preservados.'
   exit 0
 }
@@ -32,7 +33,5 @@ Export-PfxCertificate -Cert $server -FilePath (Join-Path $tlsPath 'server.pfx') 
 $publicCA = Join-Path $downloadPath 'ti-hub-rede.cer'
 Export-Certificate -Cert $ca -FilePath $publicCA | Out-Null
 @{ ip = '192.168.10.9'; hostname = $hostname; caThumbprint = $ca.Thumbprint; serverThumbprint = $server.Thumbprint; expiresAt = $server.NotAfter.ToString('o') } | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding UTF8
-$certificateBase64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($publicCA))
-$installerTemplate = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'instalar-acesso-https.template.ps1'))
-[IO.File]::WriteAllText((Join-Path $downloadPath 'instalar-acesso-ti-hub.ps1'), $installerTemplate.Replace('__CERTIFICATE_BASE64__', $certificateBase64))
+& (Join-Path $PSScriptRoot 'package-https-installer.ps1')
 Write-Output "HTTPS preparado para https://$hostname e https://192.168.10.9. Nenhuma chave privada foi incluída nos downloads."

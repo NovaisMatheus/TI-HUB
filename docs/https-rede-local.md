@@ -6,11 +6,11 @@ O nome utiliza um domínio de desenvolvimento e é mapeado localmente no arquivo
 
 ## Preparar cada computador cliente
 
-1. Abra o Hub por HTTP em `http://192.168.10.9:5173` e vá a **Meu perfil → Acesso HTTPS na rede → Baixar configurador HTTPS deste PC**. Também é possível baixar diretamente `http://192.168.10.9:5173/downloads/instalar-acesso-ti-hub.ps1`.
-2. Abra PowerShell **como administrador** e execute o arquivo baixado. Para a pasta Downloads padrão:
+1. Abra o Hub por HTTP em `http://192.168.10.9:5173` e vá a **Meu perfil → Acesso HTTPS na rede → Baixar configurador HTTPS (ZIP)**. Também é possível baixar diretamente `http://192.168.10.9:5173/downloads/configurador-https-ti-hub.zip`. Extraia o ZIP; ele contém o script e instruções de instalação.
+2. Abra PowerShell **como administrador** e execute o arquivo extraído. Substitua o caminho abaixo pela pasta onde extraiu o ZIP:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\Downloads\instalar-acesso-ti-hub.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\CAMINHO\instalar-acesso-ti-hub.ps1"
 ```
 
 3. O script adiciona `192.168.10.9 ti-hub.192-168-10-9.sslip.io` ao hosts, preserva cópia do arquivo anterior e instala a CA pública do Hub no repositório de confiança do Windows. Se o nome já apontar para outro IP, ele interrompe para revisão.
