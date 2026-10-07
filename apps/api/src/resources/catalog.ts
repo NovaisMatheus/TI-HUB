@@ -469,7 +469,17 @@ export function resourceSchema(resource: Resource, partial = false) {
     if (field.type === 'url')
       schema = z
         .string()
-        .refine((v) => (!v && field.optional) || /^https?:\/\//i.test(v), 'Use URL http ou https.');
+        .trim()
+        .max(2048)
+        .refine((value) => {
+          if (!value && field.optional) return true;
+          try {
+            const url = new URL(value);
+            return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password;
+          } catch {
+            return false;
+          }
+        }, 'Use uma URL http ou https válida, sem credenciais.');
     if (field.name === 'ip') schema = z.string().ip({ version: 'v4' });
     if (['quantity', 'year', 'version'].includes(field.name))
       schema = z.coerce.number().int().positive();

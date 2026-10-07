@@ -6,10 +6,6 @@ config({ path: resolve(process.cwd(), '../../.env'), quiet: true });
 config({ quiet: true });
 const db = new PrismaClient();
 async function seed() {
-  const password = process.env.SEED_PASSWORD;
-  if (!password || password.length < 12)
-    throw new Error('Defina SEED_PASSWORD com pelo menos 12 caracteres.');
-  const passwordHash = await hash(password, 12);
   const scopes = [
     'equipment',
     'maintenance',
@@ -46,6 +42,53 @@ async function seed() {
         update: {},
       });
     }
+  }
+  if (process.env.HUB_DEMO_DATA !== 'true') {
+    const existing = await db.user.count({
+      where: { active: true, userRole_user: { some: { role: { name: 'ADMINISTRADOR' } } } },
+    });
+    if (!existing) {
+      const name = process.env.BOOTSTRAP_NAME?.trim(),
+        email = process.env.BOOTSTRAP_EMAIL?.trim().toLowerCase(),
+        username = process.env.BOOTSTRAP_USERNAME?.trim().toLowerCase(),
+        password = process.env.BOOTSTRAP_PASSWORD;
+      if (
+        !name ||
+        !email ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+        !username ||
+        !/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/.test(username) ||
+        !password ||
+        password.length < 12 ||
+        Buffer.byteLength(password, 'utf8') > 72
+      )
+        throw new Error(
+          'Para o primeiro administrador, configure BOOTSTRAP_NAME, BOOTSTRAP_EMAIL, BOOTSTRAP_USERNAME e BOOTSTRAP_PASSWORD (12 caracteres ou mais, até 72 bytes).',
+        );
+      const admin = await db.role.findUniqueOrThrow({ where: { name: 'ADMINISTRADOR' } });
+      await db.user.create({
+        data: {
+          name,
+          email,
+          username,
+          passwordHash: await hash(password, 12),
+          userRole_user: { create: { roleId: admin.id } },
+        },
+      });
+    }
+    console.log(
+      'Perfis e permissões preparados. Dados de demonstração desativados; contas existentes preservadas.',
+    );
+    return;
+  }
+  const password = process.env.SEED_PASSWORD;
+  if (!password || password.length < 12 || Buffer.byteLength(password, 'utf8') > 72)
+    throw new Error(
+      'Defina SEED_PASSWORD com 12 caracteres ou mais e até 72 bytes, apenas na base de demonstração.',
+    );
+  const passwordHash = await hash(password, 12);
+  for (const [name] of roles) {
+    const role = await db.role.findUniqueOrThrow({ where: { name } });
     const email = {
       ADMINISTRADOR: 'admin@hub.local',
       TECNICO: 'tecnico@hub.local',

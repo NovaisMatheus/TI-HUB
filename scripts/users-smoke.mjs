@@ -1,3 +1,4 @@
+import './test-data-guard.mjs';
 import { readFileSync } from 'node:fs';
 import { randomBytes, randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';

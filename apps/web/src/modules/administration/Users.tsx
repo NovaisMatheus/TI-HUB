@@ -17,6 +17,7 @@ export function Users() {
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(blank);
   const [opened, setOpened] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   return (
@@ -37,6 +38,14 @@ export function Users() {
       <p>
         Administrador gerencia acessos. Técnico registra e altera dados. Consulta permite leitura.
       </p>
+      <label className="checkbox-label">
+        <input
+          type="checkbox"
+          checked={showInactive}
+          onChange={(e) => setShowInactive(e.target.checked)}
+        />{' '}
+        Mostrar usuários inativos
+      </label>
       {opened && (
         <form
           className="account-form"
@@ -155,37 +164,39 @@ export function Users() {
               </tr>
             </thead>
             <tbody>
-              {users.data?.map((user) => (
-                <tr key={user.id}>
-                  <td>
-                    {user.name}
-                    <small className="muted">{user.email}</small>
-                  </td>
-                  <td>{user.username ?? 'Usa e-mail'}</td>
-                  <td>{user.roles.join(', ')}</td>
-                  <td>{user.active ? 'Ativo' : 'Inativo'}</td>
-                  <td>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setEditing(user.id);
-                        setForm({
-                          name: user.name,
-                          email: user.email,
-                          username: user.username ?? '',
-                          role: user.roles[0] ?? 'CONSULTA',
-                          active: user.active,
-                          password: '',
-                        });
-                        setMessage('');
-                        setOpened(true);
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {users.data
+                ?.filter((user) => showInactive || user.active)
+                .map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      {user.name}
+                      <small className="muted">{user.email}</small>
+                    </td>
+                    <td>{user.username ?? 'Usa e-mail'}</td>
+                    <td>{user.roles.join(', ')}</td>
+                    <td>{user.active ? 'Ativo' : 'Inativo'}</td>
+                    <td>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setEditing(user.id);
+                          setForm({
+                            name: user.name,
+                            email: user.email,
+                            username: user.username ?? '',
+                            role: user.roles[0] ?? 'CONSULTA',
+                            active: user.active,
+                            password: '',
+                          });
+                          setMessage('');
+                          setOpened(true);
+                        }}
+                      >
+                        Editar
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>

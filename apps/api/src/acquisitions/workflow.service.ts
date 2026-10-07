@@ -22,6 +22,7 @@ export class WorkflowService {
     if (data.result === 'DIVERGENCIA' && !data.reason.trim())
       throw new BadRequestException('Registre o motivo da divergência.');
     return this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "TechnicalAnalysis" WHERE "id" = ${id} FOR UPDATE`;
       const analysis = await tx.technicalAnalysis.findUnique({ where: { id } });
       if (!analysis) throw new NotFoundException();
       if (analysis.concludedAt) throw new BadRequestException('Análise já concluída.');
@@ -53,6 +54,7 @@ export class WorkflowService {
       input,
     );
     return this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "TechnicalAnalysis" WHERE "id" = ${id} FOR UPDATE`;
       const before = await tx.technicalAnalysis.findUnique({
         where: { id },
         include: {
@@ -116,6 +118,7 @@ export class WorkflowService {
     if (data.result === 'DIVERGENCIA' && !data.divergences.trim())
       throw new BadRequestException('Descreva a divergência.');
     return this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "TechnicalInspection" WHERE "id" = ${id} FOR UPDATE`;
       const before = await tx.inspectionItem.findUnique({ where: { id: data.itemId } });
       if (before?.inspectionId !== id) throw new BadRequestException('Item inválido.');
       const { itemId, ...values } = data;

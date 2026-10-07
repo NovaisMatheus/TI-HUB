@@ -191,9 +191,18 @@ export class ResourceController {
   @Permission('admin.audit.read') @Get('audit') async audit(
     @Query() query: Record<string, string>,
   ) {
-    const page = Math.max(1, Number(query.page) || 1);
-    const where = query.q
-      ? { OR: [{ entityType: { contains: query.q } }, { action: { contains: query.q } }] }
+    const data = validate(
+      z
+        .object({
+          page: z.coerce.number().int().min(1).max(100000).default(1),
+          q: z.string().max(200).default(''),
+        })
+        .passthrough(),
+      query,
+    );
+    const page = data.page;
+    const where = data.q
+      ? { OR: [{ entityType: { contains: data.q } }, { action: { contains: data.q } }] }
       : {};
     return {
       items: await this.db.auditLog.findMany({

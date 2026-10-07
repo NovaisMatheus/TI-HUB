@@ -118,7 +118,11 @@ export function EntityForm({
     }
     if (initial[field.name] === undefined)
       initial[field.name] =
-        field.type === 'number' ? (field.name === 'year' ? 2026 : 1) : (field.options?.[0] ?? '');
+        field.type === 'number'
+          ? field.name === 'year'
+            ? new Date().getFullYear()
+            : 1
+          : (field.options?.[0] ?? '');
     if (field.type === 'tags' && Array.isArray(initial[field.name]))
       initial[field.name] = (initial[field.name] as string[]).join(', ');
   }
@@ -141,7 +145,12 @@ export function EntityForm({
           .split(',')
           .map((v) => v.trim())
           .filter(Boolean);
-      if (field.optional && data[field.name] === '') delete data[field.name];
+      if (
+        field.optional &&
+        data[field.name] === '' &&
+        (!item || field.ref || field.type === 'email')
+      )
+        delete data[field.name];
     }
     try {
       const row = await send<Entity>(

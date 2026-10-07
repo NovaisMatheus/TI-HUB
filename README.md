@@ -1,6 +1,6 @@
 # UGB TI Hub
 
-Workspace técnico interno para centralizar equipamentos, intervenções, conhecimento e a cadeia técnica de aquisições de uma prefeitura. Primeira fundação executável, com frontend e API separados, persistência PostgreSQL, permissões e trilha de auditoria. Os dados iniciais são fictícios.
+Workspace técnico interno para centralizar equipamentos, intervenções, conhecimento e a cadeia técnica de aquisições de uma prefeitura. Primeira fundação executável, com frontend e API separados, persistência PostgreSQL, permissões e trilha de auditoria. A inicialização padrão prepara perfis e o administrador, sem inserir dados fictícios.
 
 A [extensão Chrome para 1Doc](docs/chrome-1doc.md) coleta documentos e despachos ao clicar em Coletar, criando ou atualizando registros no módulo Demandas. Instalação e conexão estão descritas no guia.
 
@@ -13,6 +13,7 @@ pnpm install
 pnpm setup:local
 # Gera .env com JWT_SECRET e SEED_PASSWORD aleatórios.
 # Revise DATABASE_URL e CORS_ORIGIN para seu ambiente.
+# Em uma base nova, preencha os campos BOOTSTRAP_* do primeiro administrador.
 docker compose up -d postgres
 pnpm db:generate
 pnpm db:migrate
@@ -24,13 +25,9 @@ Sem Docker, execute `pnpm db:local` em um terminal e mantenha-o aberto. É Postg
 
 Abra [http://localhost:5173](http://localhost:5173). A API fica em `http://localhost:3001/api`. O Vite encaminha `/api` para o NestJS; o navegador não acessa o banco.
 
-| Conta fictícia       | Perfil          |
-| -------------------- | --------------- |
-| `admin@hub.local`    | Administrador   |
-| `tecnico@hub.local`  | Técnico         |
-| `consulta@hub.local` | Somente leitura |
+Para uma base nova, preencha BOOTSTRAP_NAME, BOOTSTRAP_EMAIL, BOOTSTRAP_USERNAME e BOOTSTRAP_PASSWORD no arquivo .env antes de executar pnpm db:seed. A senha precisa de pelo menos 12 caracteres e no máximo 72 bytes. Se já existir administrador ativo, suas contas e senhas são preservadas. Remova BOOTSTRAP_PASSWORD após o primeiro cadastro. Entre por usuário ou e-mail.
 
-A senha das três contas é o valor de `SEED_PASSWORD` definido no primeiro seed. Reexecutar o seed preserva senhas e registros existentes; não reseta o banco. Não usar essas contas em produção. Neste workspace, `.env` já foi gerado com valores locais aleatórios e o seed foi aplicado.
+Dados fictícios e as antigas contas de demonstração somente são criados quando HUB_DEMO_DATA=true. Use exclusivamente em uma base descartável de homologação. Neste workspace, os dados fictícios foram removidos e os acessos de teste desativados; os documentos reais e a conta de uso foram preservados.
 
 ## Aplicação inteira em Docker
 
@@ -86,15 +83,17 @@ pnpm typecheck
 pnpm lint
 pnpm build
 pnpm test
-# Com API e banco iniciados:
+# Apenas com API conectada a uma base descartável de homologação:
+$env:HUB_ALLOW_TEST_DATA = "true"
 pnpm test:smoke
 pnpm test:chain
 pnpm test:interface
 pnpm test:1doc
 pnpm test:chat
+pnpm test:users
 ```
 
-Os smoke tests criam registros fictícios, versões e eventos de auditoria no banco de desenvolvimento. O teste de cadeia cria um processo completo. Execute apenas em uma base descartável de desenvolvimento. Testes unitários não dependem do banco.
+Os smoke tests exigem HUB_ALLOW_TEST_DATA=true e criam registros fictícios, versões e eventos de auditoria. A execução padrão é bloqueada para proteger a base de uso. O teste de cadeia cria um processo completo. Execute apenas em uma base descartável de desenvolvimento. Testes unitários não dependem do banco.
 
 Migrations são SQL versionado em `apps/api/prisma/migrations`. Após mudar o schema em desenvolvimento, gere uma nova migration com o Prisma e revise o SQL; não altere migrations já aplicadas. `pnpm db:migrate` utiliza [Prisma migrate deploy](https://docs.prisma.io/docs/cli/migrate/deploy).
 
@@ -104,6 +103,10 @@ GLPI, Drive/Docs, acesso remoto e IA generativa permanecem em modo mock. Os link
 
 O teste ICMP real é desativado por padrão. Pode ser habilitado com `ENABLE_CONNECTION_TEST=true` no backend e executado somente pelo botão do equipamento. É restrito a IPv4 privado cadastrado, um pacote por solicitação, timeout curto, sem shell e sem alteração de status. Containers precisam fornecer o utilitário `ping` e a permissão de rede adequada. RDP/VNC/SMB nunca são executados pelo navegador.
 
-Esta iteração cadastra um item por formulário de requisição, proposta e empenho; o modelo suporta múltiplos itens para evolução da UX. Documentos são referências externas; upload binário, fotos e anexos locais ainda não possuem armazenamento. Contatos de fornecedores existem no modelo e seed, mas não têm editor separado. Revisão de POP, gestão de usuários/roles pela interface, favoritos por usuário, renomeação/exclusão de conversas e providers externos são evoluções pendentes. O vault AES-GCM é uma base de integração, sem endpoints de credenciais nesta versão.
+Esta iteração cadastra um item por formulário de requisição, proposta e empenho; o modelo suporta múltiplos itens para evolução da UX. Documentos são referências externas; upload binário, fotos e anexos locais ainda não possuem armazenamento. Contatos de fornecedores existem no modelo e seed, mas não têm editor separado. Gestão de usuários e troca de senha já estão disponíveis na interface. Revisão editorial de POP, editor de permissões por perfil, favoritos por usuário, edição de conversas na interface e novos providers externos permanecem pendentes. Google Chat possui OAuth individual e tokens criptografados; a extensão 1Doc usa credenciais próprias revogáveis.
 
 Veja [arquitetura](docs/architecture.md), [domínio](docs/domain.md), [integrações](docs/integrations.md) e [segurança](docs/security.md). Antes de produção, concluir hardening, gestão de identidades, backups, TLS, observabilidade centralizada, revisão de segurança e homologação com os técnicos.
+
+## Especificação e operação
+
+Consulte [a especificação funcional e técnica](docs/especificacao-projeto.md), [o manual de operação](docs/operacao.md) e [o relatório de revisão](docs/revisao-codigo.md).

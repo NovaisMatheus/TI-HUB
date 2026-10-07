@@ -62,6 +62,18 @@ describe('Providers seguros', () => {
     expect((await new MockRemoteAccessProvider().launch('rdp', 'PC-01')).message).toContain(
       'Nenhum comando',
     );
+    expect(resourceSchema(catalog.documents, true).safeParse({ url: 'http://' }).success).toBe(
+      false,
+    );
+    expect(
+      resourceSchema(catalog.documents, true).safeParse({
+        url: 'https://user:password@example.com',
+      }).success,
+    ).toBe(false);
+    expect(
+      resourceSchema(catalog.documents, true).safeParse({ url: 'https://example.com/documento' })
+        .success,
+    ).toBe(true);
   });
 });
 describe('Secret vault e apresentação', () => {

@@ -69,8 +69,9 @@ export class RecordHooks {
     if (['specifications', 'requests', 'acquisitions'].includes(name) && !id)
       data.responsibleId = user.id;
     if (name === 'documents') {
-      const targetType = String(data.entityType),
-        targetId = String(data.entityId);
+      const existing = id ? await tx.documentReference.findUniqueOrThrow({ where: { id } }) : null;
+      const targetType = String(data.entityType ?? existing?.entityType),
+        targetId = String(data.entityId ?? existing?.entityId);
       const allowed: Record<string, string> = {
         equipment: 'equipment',
         maintenance: 'maintenanceRecord',
@@ -100,13 +101,17 @@ export class RecordHooks {
       )[allowed[targetType]];
       if (!model || !(await model.findUnique({ where: { id: targetId } })))
         throw new BadRequestException('Registro relacionado não encontrado.');
-      data.createdById = user.id;
+      if (!id) data.createdById = user.id;
     }
     if (name === 'knowledge' || name === 'specifications') {
       const content = data.content;
       delete data.content;
       const requirements = data.requirements;
       delete data.requirements;
+      if (requirements !== undefined && content === undefined)
+        throw new BadRequestException(
+          'Ao alterar requisitos, informe também o conteúdo da nova versão do descritivo.',
+        );
       if (content !== undefined) {
         const latest = id
           ? name === 'knowledge'
@@ -126,7 +131,21 @@ export class RecordHooks {
             ? { authorId: user.id }
             : {
                 specificationRequirement_version: {
-                  create: this.requirements(String(requirements ?? '')),
+                  create:
+                    requirements === undefined && id && latest
+                      ? (
+                          await tx.specificationRequirement.findMany({
+                            where: { versionId: latest.id },
+                          })
+                        ).map(({ group, field, operator, value, unit, valueType }) => ({
+                          group,
+                          field,
+                          operator,
+                          value,
+                          unit,
+                          valueType,
+                        }))
+                      : this.requirements(String(requirements ?? '')),
                 },
               }),
         };
@@ -150,6 +169,15 @@ export class RecordHooks {
       }
     }
     if (name === 'proposals') {
+      const parent = id ? await tx.proposal.findUniqueOrThrow({ where: { id } }) : null;
+      if (
+        parent &&
+        ((data.processId !== undefined && data.processId !== parent.processId) ||
+          (data.supplierId !== undefined && data.supplierId !== parent.supplierId))
+      )
+        throw new BadRequestException(
+          'Para trocar processo ou fornecedor, registre uma nova proposta.',
+        );
       const item = take(data, [
         'requestItemId',
         'brand',
@@ -161,15 +189,16 @@ export class RecordHooks {
         'manufacturerUrl',
       ]);
       if (Object.keys(item).length) {
+        const existing = id ? await tx.proposalItem.findFirst({ where: { proposalId: id } }) : null;
+        const processId = data.processId ?? parent?.processId;
         const process = await tx.purchaseProcess.findUnique({
-          where: { id: String(data.processId) },
+          where: { id: String(processId) },
         });
         const requested = await tx.purchaseRequestItem.findUnique({
-          where: { id: String(item.requestItemId) },
+          where: { id: String(item.requestItemId ?? existing?.requestItemId) },
         });
         if (!process || requested?.requestId !== process.requestId)
           throw new BadRequestException('O item não pertence à requisição do processo.');
-        const existing = id ? await tx.proposalItem.findFirst({ where: { proposalId: id } }) : null;
         data.proposalItem_proposal = existing
           ? { update: { where: { id: existing.id }, data: item } }
           : { create: item };
@@ -198,27 +227,36 @@ export class RecordHooks {
       };
     }
     if (name === 'commitments') {
+      const parent = id ? await tx.commitment.findUniqueOrThrow({ where: { id } }) : null;
+      if (
+        parent &&
+        ['processId', 'requestId', 'supplierId'].some(
+          (key) => data[key] !== undefined && data[key] !== parent[key as keyof typeof parent],
+        )
+      )
+        throw new BadRequestException('Para trocar os vínculos, registre um novo empenho.');
       const item = take(data, ['proposalItemId', 'quantity', 'value']);
       if (Object.keys(item).length) {
+        const existing = id
+          ? await tx.commitmentItem.findFirst({ where: { commitmentId: id } })
+          : null;
+        const processId = data.processId ?? parent?.processId;
         const proposalItem = await tx.proposalItem.findUnique({
-          where: { id: String(item.proposalItemId) },
+          where: { id: String(item.proposalItemId ?? existing?.proposalItemId) },
           include: { proposal: true },
         });
         const process = await tx.purchaseProcess.findUnique({
-          where: { id: String(data.processId) },
+          where: { id: String(processId) },
         });
         if (
           !proposalItem ||
-          proposalItem.proposal.processId !== data.processId ||
-          proposalItem.proposal.supplierId !== data.supplierId ||
-          process?.requestId !== data.requestId
+          proposalItem.proposal.processId !== processId ||
+          proposalItem.proposal.supplierId !== (data.supplierId ?? parent?.supplierId) ||
+          process?.requestId !== (data.requestId ?? parent?.requestId)
         )
           throw new BadRequestException(
             'Os vínculos do empenho devem corresponder à proposta e à requisição.',
           );
-        const existing = id
-          ? await tx.commitmentItem.findFirst({ where: { commitmentId: id } })
-          : null;
         data.commitmentItem_commitment = existing
           ? { update: { where: { id: existing.id }, data: item } }
           : { create: item };

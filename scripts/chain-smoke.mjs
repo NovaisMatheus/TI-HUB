@@ -1,3 +1,4 @@
+import './test-data-guard.mjs';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 const password = readFileSync('.env', 'utf8')
