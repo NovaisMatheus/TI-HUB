@@ -19,6 +19,25 @@ function collect(
   return (context as typeof context & { ugbCollectOneDoc: () => OneDocImport }).ugbCollectOneDoc();
 }
 describe('Coletor Chrome 1Doc', () => {
+  it('aceita documento sem link externo, preservando anexos e despachos', () => {
+    const result = collect(
+      fixture.replace(/<a href="https:\/\/tenant\.1doc\.com\.br\/b\.php[^>]*>12345<\/a>/, ''),
+    );
+    expect(result.externalUrl).toBe('');
+    expect(result.attachments.length).toBeGreaterThan(0);
+    expect(result.dispatches).toHaveLength(2);
+    expect(oneDocImportSchema.safeParse(result).success).toBe(true);
+  });
+  it('retorna validação para links vazios ou malformados sem lançar erro interno', () => {
+    for (const invalid of ['', '/arquivo.pdf', 'http://[', 'javascript:alert(1)']) {
+      const attachmentPayload = collect();
+      attachmentPayload.attachments[0].url = invalid;
+      expect(oneDocImportSchema.safeParse(attachmentPayload).success).toBe(false);
+      const sourcePayload = collect();
+      sourcePayload.sourceUrl = invalid;
+      expect(oneDocImportSchema.safeParse(sourcePayload).success).toBe(false);
+    }
+  });
   it('extrai tipo do cabeçalho, solicitante, campos e cada despacho sem duplicar a tabela', () => {
     const result = collect();
     expect(oneDocImportSchema.safeParse(result).success).toBe(true);

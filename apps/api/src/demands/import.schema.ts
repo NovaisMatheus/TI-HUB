@@ -1,12 +1,19 @@
 import { z } from 'zod';
 const text = z.string().max(2000);
+function parseUrl(value: string) {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
 const link = z
   .string()
   .url()
   .max(4000)
   .refine((value) => {
-    const url = new URL(value);
-    return url.protocol === 'https:' && !url.username && !url.password;
+    const url = parseUrl(value);
+    return !!url && url.protocol === 'https:' && !url.username && !url.password;
   }, 'Link deve usar HTTPS.');
 const attachment = z
   .object({ name: text, url: link, kind: z.enum(['file', 'image', 'link']), details: text })
@@ -37,7 +44,7 @@ export const oneDocImportSchema = z
     collectorVersion: z.literal('1.0.0'),
     source: z.literal('1doc'),
     sourceUrl: link.refine(
-      (value) => new URL(value).hostname.endsWith('.1doc.com.br'),
+      (value) => !!parseUrl(value)?.hostname.endsWith('.1doc.com.br'),
       'Página deve pertencer ao 1Doc.',
     ),
     sourceId: z.string().min(1).max(200),
