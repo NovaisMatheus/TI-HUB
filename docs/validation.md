@@ -90,3 +90,13 @@ Snapshot consistente de 49 modelos e 1.033 registros salvo fora do Git antes da 
 65 testes automatizados aprovados, typecheck, lint e build concluídos. Verificação em PostgreSQL descartável confirmou criação idempotente do atendimento, equipamento opcional, origem completa, documentos com texto extraído, timeline dos despachos, preservação de diagnóstico/solução e sincronização de situação e observações. Nenhuma massa de teste foi criada na base de uso.
 
 Oitava migration aplicada após snapshot local. Sincronização autenticada na base de uso vinculou três demandas SUPORTE a três atendimentos, exibindo quatro despachos e três referências aos documentos originais. Segunda execução confirmou ausência de duplicação. Acesso HTTP aos detalhes aprovado. Sistema reiniciado em HTTP na rede e gateway HTTPS ativo. Verificação visual em navegador real permanece não realizada.
+
+## Perfil, navegação e desempenho — 08/10/2026
+
+73 testes automatizados aprovados; typecheck, lint e build concluídos. Testes DOM cobrem edição de perfil e preservação do formulário em falha, filtros mantidos ao abrir/voltar, suporte sem equipamento, e-mail opcional vazio e seleção de equipamento fora da primeira página. Testes da API cliente cobrem resposta HTML de proxy, erros de validação e encaminhamento de cancelamento.
+
+Verificação em PostgreSQL descartável confirmou persistência dos novos campos pessoais, auditoria, preservação em atualizações parciais, ausência de credenciais no retorno do perfil e rejeição de tentativa de alterar perfil de acesso pela rota pessoal. A lista de demandas não retorna metadados, corpo completo ou despachos. O fluxo anterior de aquisições/suporte/anexos permaneceu aprovado.
+
+Na base de uso, consultas autenticadas verificaram perfil, lista e dashboard com três suportes em aberto. Para as cinco demandas existentes, o tamanho serializado da resposta de lista caiu de 169.967 para 1.532 bytes (cerca de 99%). O conteúdo completo continua nos detalhes. Pacote principal de produção passou de 502,37 para 437,76 KB, com módulos separados; a medição é de tamanho, sem afirmar uma redução equivalente no tempo de navegação.
+
+Nona migration aplicada após snapshot consistente local (51 tabelas/245 registros). Não foram alteradas informações pessoais da conta real nem inseridos dados fictícios. Sistema reiniciado na rede e gateway HTTPS ativo. Inspeção visual em navegador real não realizada devido à restrição vigente da ferramenta.

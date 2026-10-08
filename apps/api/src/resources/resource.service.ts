@@ -66,6 +66,22 @@ export class ResourceService {
       where.entityType = { in: Object.keys(catalog).filter((key) => canAccess(key, user)) };
     if (query.status && config.fields.some((f) => f.name === 'status')) where.status = query.status;
     if (name === 'demands' && query.kind) where.kind = query.kind;
+    if (q && name === 'demands')
+      (where.OR as unknown[]).push({
+        dispatches: { some: { content: { contains: q, mode: 'insensitive' } } },
+      });
+    if (q && ['maintenance', 'acquisitions'].includes(name))
+      (where.OR as unknown[]).push({
+        sourceDemand: {
+          is: {
+            OR: [
+              { title: { contains: q, mode: 'insensitive' } },
+              { number: { contains: q, mode: 'insensitive' } },
+              { dispatches: { some: { content: { contains: q, mode: 'insensitive' } } } },
+            ],
+          },
+        },
+      });
     if (q && name === 'equipment')
       (where.OR as unknown[]).push(
         { equipmentNetwork_equipment: { is: { ip: { contains: q } } } },
@@ -85,8 +101,23 @@ export class ResourceService {
     const [items, total] = await Promise.all([
       model.findMany({
         where,
-        include: config.include,
-        orderBy: { [sort]: query.direction === 'asc' ? 'asc' : 'desc' },
+        ...(name === 'demands'
+          ? {
+              select: {
+                id: true,
+                number: true,
+                documentType: true,
+                kind: true,
+                title: true,
+                requester: true,
+                status: true,
+                sourceStatus: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            }
+          : { include: config.include }),
+        orderBy: [{ [sort]: query.direction === 'asc' ? 'asc' : 'desc' }, { id: 'asc' }],
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),

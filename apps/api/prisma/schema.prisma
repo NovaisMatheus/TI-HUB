@@ -18,6 +18,10 @@ model User {
   passwordHash                       String
   active                             Boolean                   @default(true)
   theme                              String                    @default("system")
+  jobTitle                           String                    @default("")
+  departmentName                     String                    @default("")
+  phone                              String                    @default("")
+  bio                                String                    @default("")
   userRole_user                      UserRole[]                @relation("UserRole_user")
   equipmentStatusHistory_user        EquipmentStatusHistory[]  @relation("EquipmentStatusHistory_user")
   maintenanceRecord_technician       MaintenanceRecord[]       @relation("MaintenanceRecord_technician")

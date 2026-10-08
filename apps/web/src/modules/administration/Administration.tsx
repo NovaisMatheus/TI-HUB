@@ -7,6 +7,7 @@ import type { Page, SessionUser } from '@hub/types';
 import { ExtensionSettings } from '../demands/ExtensionSettings';
 import { PageHeader, State } from '../../components/PageHeader';
 import { Users, PasswordSettings } from './Users';
+import { ProfileDetails } from './ProfileDetails';
 export function Administration({ user }: { user: SessionUser }) {
   const [page, setPage] = useState(1),
     [q, setQ] = useState('');
@@ -114,14 +115,17 @@ export function Profile({ user }: { user: SessionUser }) {
   const profile = useQuery({ queryKey: ['profile'], queryFn: () => api<Entity>('profile') });
   return (
     <>
-      <PageHeader
-        title="Meu perfil"
-        description="Preferências pessoais e configuração do assistente."
-      />
-      <section className="detail-section">
-        <h2>{user.name}</h2>
-        <p>{user.email}</p>
-      </section>
+      <PageHeader title="Meu perfil" description="Seus dados, acesso e preferências pessoais." />
+      {profile.data ? (
+        <ProfileDetails account={object(profile.data.account)} />
+      ) : (
+        <section className="detail-section">
+          <h2>{user.name}</h2>
+          <p>{user.email}</p>
+          {profile.isLoading && <p>Carregando perfil…</p>}
+          {profile.isError && <p role="alert">{profile.error.message}</p>}
+        </section>
+      )}
       {user.permissions.includes('demands.write') && <ExtensionSettings />}
       <section className="detail-section">
         <h2>Acesso HTTPS na rede</h2>

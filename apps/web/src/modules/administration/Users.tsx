@@ -20,6 +20,7 @@ export function Users() {
   const [showInactive, setShowInactive] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [search, setSearch] = useState('');
   return (
     <section className="detail-section">
       <div className="section-heading">
@@ -38,6 +39,15 @@ export function Users() {
       <p>
         Administrador gerencia acessos. Técnico registra e altera dados. Consulta permite leitura.
       </p>
+      <label className="account-search">
+        Buscar usuário
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Nome, e-mail ou usuário…"
+        />
+      </label>
       <label className="checkbox-label">
         <input
           type="checkbox"
@@ -165,7 +175,13 @@ export function Users() {
             </thead>
             <tbody>
               {users.data
-                ?.filter((user) => showInactive || user.active)
+                ?.filter(
+                  (user) =>
+                    (showInactive || user.active) &&
+                    `${user.name} ${user.email} ${user.username ?? ''}`
+                      .toLocaleLowerCase('pt-BR')
+                      .includes(search.toLocaleLowerCase('pt-BR')),
+                )
                 .map((user) => (
                   <tr key={user.id}>
                     <td>

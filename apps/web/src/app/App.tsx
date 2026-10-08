@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SessionUser } from '@hub/types';
@@ -6,13 +6,32 @@ import { api, ApiError } from '../services/api';
 import type { Catalog } from '../types';
 import { Login } from '../modules/auth/Login';
 import { Workspace } from '../layouts/Workspace';
-import { Dashboard } from '../modules/dashboard/Dashboard';
-import { Assistant } from '../modules/ai/Assistant';
-import { Administration, Profile, Tools } from '../modules/administration/Administration';
-import { ResourceList } from '../components/ResourceList';
-import { EntityDetail } from '../components/EntityDetail';
 import { State } from '../components/PageHeader';
-import { DemandDetail } from '../modules/demands/DemandDetail';
+import { RouteBoundary } from '../components/RouteBoundary';
+const Dashboard = lazy(() =>
+  import('../modules/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })),
+);
+const Assistant = lazy(() =>
+  import('../modules/ai/Assistant').then((m) => ({ default: m.Assistant })),
+);
+const Administration = lazy(() =>
+  import('../modules/administration/Administration').then((m) => ({ default: m.Administration })),
+);
+const Profile = lazy(() =>
+  import('../modules/administration/Administration').then((m) => ({ default: m.Profile })),
+);
+const Tools = lazy(() =>
+  import('../modules/administration/Administration').then((m) => ({ default: m.Tools })),
+);
+const ResourceList = lazy(() =>
+  import('../components/ResourceList').then((m) => ({ default: m.ResourceList })),
+);
+const EntityDetail = lazy(() =>
+  import('../components/EntityDetail').then((m) => ({ default: m.EntityDetail })),
+);
+const DemandDetail = lazy(() =>
+  import('../modules/demands/DemandDetail').then((m) => ({ default: m.DemandDetail })),
+);
 function ResourceRoute({ catalog, user }: { catalog: Catalog; user: SessionUser }) {
   const { name = '', id } = useParams();
   if (name === 'demands' && id && catalog.demands)
@@ -56,31 +75,38 @@ export function App() {
   if (catalog.isError) return <State error message={catalog.error.message} />;
   const user = session.data;
   return (
-    <Routes>
-      <Route
-        element={
-          <Workspace
-            user={user}
-            onLogout={() => {
-              client.setQueryData(['session'], null);
-              client.removeQueries({ predicate: (q) => q.queryKey[0] !== 'session' });
-            }}
-            searchOpen={search}
-            setSearchOpen={setSearch}
-          />
-        }
-      >
-        <Route index element={<Dashboard user={user} onSearch={() => setSearch(true)} />} />
-        <Route path="assistant" element={<Assistant />} />
-        <Route path="administration" element={<Administration user={user} />} />
-        <Route path="profile" element={<Profile user={user} />} />
-        <Route path="tools" element={<Tools />} />
-        <Route path=":name" element={<ResourceRoute catalog={catalog.data ?? {}} user={user} />} />
-        <Route
-          path=":name/:id"
-          element={<ResourceRoute catalog={catalog.data ?? {}} user={user} />}
-        />
-      </Route>
-    </Routes>
+    <RouteBoundary>
+      <Suspense fallback={<State message="Carregando módulo…" />}>
+        <Routes>
+          <Route
+            element={
+              <Workspace
+                user={user}
+                onLogout={() => {
+                  client.setQueryData(['session'], null);
+                  client.removeQueries({ predicate: (q) => q.queryKey[0] !== 'session' });
+                }}
+                searchOpen={search}
+                setSearchOpen={setSearch}
+              />
+            }
+          >
+            <Route index element={<Dashboard user={user} onSearch={() => setSearch(true)} />} />
+            <Route path="assistant" element={<Assistant />} />
+            <Route path="administration" element={<Administration user={user} />} />
+            <Route path="profile" element={<Profile user={user} />} />
+            <Route path="tools" element={<Tools />} />
+            <Route
+              path=":name"
+              element={<ResourceRoute catalog={catalog.data ?? {}} user={user} />}
+            />
+            <Route
+              path=":name/:id"
+              element={<ResourceRoute catalog={catalog.data ?? {}} user={user} />}
+            />
+          </Route>
+        </Routes>
+      </Suspense>
+    </RouteBoundary>
   );
 }

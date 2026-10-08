@@ -7,6 +7,7 @@ import type { Page } from '@hub/types';
 import { api, send, ApiError } from '../services/api';
 import { display, entities, object, type Entity, type Field, type Resource } from '../types';
 import { useState } from 'react';
+import { useDebounced } from '../services/use-debounced';
 function RelationField({
   field,
   control,
@@ -19,34 +20,64 @@ function RelationField({
   );
   const processId = useWatch({ control, name: 'processId' });
   const requestId = useWatch({ control, name: 'requestId' });
+  const selectedId = useWatch({ control, name: field.name });
+  const [search, setSearch] = useState('');
+  const settledSearch = useDebounced(search);
   const scope = processId
     ? `?processId=${encodeURIComponent(String(processId))}`
     : requestId
       ? `?requestId=${encodeURIComponent(String(requestId))}`
       : '';
   const query = useQuery<Page<Entity> | { id: string; label: string }[]>({
-    queryKey: ['options', field.ref, special ? scope : ''],
-    queryFn: async () =>
+    queryKey: ['options', field.ref, special ? scope : settledSearch],
+    queryFn: async ({ signal }) =>
       special
-        ? await api<{ id: string; label: string }[]>(`lookups/${field.ref}${scope}`)
-        : await api<Page<Entity>>(`records/${field.ref}?pageSize=100`),
+        ? await api<{ id: string; label: string }[]>(`lookups/${field.ref}${scope}`, { signal })
+        : await api<Page<Entity>>(
+            `records/${field.ref}?pageSize=100&q=${encodeURIComponent(settledSearch)}`,
+            { signal },
+          ),
+  });
+  const selected = useQuery({
+    queryKey: ['record', field.ref, String(selectedId ?? '')],
+    queryFn: ({ signal }) =>
+      api<Entity>(`records/${field.ref}/${encodeURIComponent(String(selectedId))}`, { signal }),
+    enabled:
+      !special &&
+      !!selectedId &&
+      !!query.data &&
+      !(query.data as Page<Entity>).items.some((row) => row.id === selectedId),
   });
   const options = special
     ? ((query.data as { id: string; label: string }[] | undefined) ?? [])
-    : ((query.data as Page<Entity> | undefined)?.items ?? []).map((row) => ({
-        id: row.id,
-        label: display(
-          row.hostname ??
-            row.tradeName ??
-            row.title ??
-            row.object ??
-            row.number ??
-            row.problem ??
-            row.name,
-        ),
-      }));
+    : [
+        ...(selected.data ? [selected.data] : []),
+        ...((query.data as Page<Entity> | undefined)?.items ?? []),
+      ]
+        .filter((row, index, rows) => rows.findIndex((other) => other.id === row.id) === index)
+        .map((row) => ({
+          id: row.id,
+          label: display(
+            row.hostname ??
+              row.tradeName ??
+              row.title ??
+              row.object ??
+              row.number ??
+              row.problem ??
+              row.name,
+          ),
+        }));
   return (
     <>
+      {!special && (
+        <input
+          type="search"
+          aria-label={`Buscar ${field.label.toLowerCase()}`}
+          placeholder={`Buscar ${field.label.toLowerCase()}…`}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      )}
       <Controller
         name={field.name}
         control={control}
@@ -70,6 +101,14 @@ function RelationField({
         )}
       />
       {query.isError && <small className="error">Não foi possível carregar opções.</small>}
+      {!special &&
+      (query.data as Page<Entity> | undefined)?.total &&
+      (query.data as Page<Entity>).total > 100 ? (
+        <small>Digite para localizar entre {(query.data as Page<Entity>).total} registros.</small>
+      ) : null}
+      {selected.isError && (
+        <small className="error">Não foi possível carregar o vínculo atual.</small>
+      )}
     </>
   );
 }
@@ -121,8 +160,10 @@ export function EntityForm({
     else {
       let schema = z.string().min(field.optional ? 0 : 1, 'Campo obrigatório.');
       if (field.type === 'email') schema = z.string().email('Email inválido.');
-      shape[field.name] = schema;
+      shape[field.name] =
+        field.optional && field.type === 'email' ? z.union([z.literal(''), schema]) : schema;
     }
+    if (initial[field.name] === null && field.type !== 'number') initial[field.name] = '';
     if (initial[field.name] === undefined)
       initial[field.name] =
         field.type === 'number'
@@ -155,6 +196,7 @@ export function EntityForm({
       if (
         field.optional &&
         data[field.name] === '' &&
+        !(resource === 'maintenance' && item && field.name === 'equipmentId' && item.equipmentId) &&
         (!item || field.ref || field.type === 'email')
       )
         delete data[field.name];

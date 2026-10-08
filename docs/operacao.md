@@ -78,3 +78,9 @@ HTTPS foi preparado em `https://ti-hub.192-168-10-9.sslip.io` com certificado lo
 | Campo aparece vazio               | Confirmar cadastro real e versões; a base não é preenchida com exemplos automaticamente                                  |
 
 Após atualização, aplique migrations, gere o Prisma Client quando o schema mudar, execute verificações e reinicie a API. Mantenha o PostgreSQL ativo. Em produção, use infraestrutura homologada; os comandos locais e o Compose atual são uma base de desenvolvimento.
+
+## Melhorias de uso — 08/10/2026
+
+Em Meu perfil, escolha Editar meu perfil para informar cargo, setor, ramal e apresentação. O administrador altera usuário, e-mail e perfil de acesso. Os suportes pendentes aparecem no início; abra o atendimento para continuar o diagnóstico.
+
+Nas listas, a busca e os filtros ficam no endereço: abrir um registro e voltar mantém o contexto. Limpar filtros reinicia a seleção. Nos formulários, use a pesquisa acima do seletor para localizar equipamentos, setores e outros vínculos; a seleção atual permanece disponível mesmo fora dos primeiros registros. O botão de recolher o menu e o painel de chat preservam sua escolha neste navegador.

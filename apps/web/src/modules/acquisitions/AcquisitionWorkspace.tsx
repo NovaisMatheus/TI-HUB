@@ -303,10 +303,12 @@ export function AcquisitionDocuments({
   documents,
   user,
   onUseText,
+  heading = 'Descritivos, orçamentos e documentos',
 }: {
   documents: Entity[];
   user: Pick<SessionUser, 'permissions'>;
   onUseText?: (text: string) => void;
+  heading?: string;
 }) {
   const client = useQueryClient();
   const [message, setMessage] = useState(''),
@@ -347,7 +349,7 @@ export function AcquisitionDocuments({
   }
   return (
     <section className="detail-section">
-      <h2>Descritivos, orçamentos e documentos</h2>
+      <h2>{heading}</h2>
       <p>
         PDF, DOCX, XLSX, TXT e CSV têm extração de texto. Arquivos digitalizados ou formatos sem
         texto precisam de conferência manual. A categoria inicial é sugerida pelo nome.

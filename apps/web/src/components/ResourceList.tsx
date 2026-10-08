@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Badge, Button } from '@hub/ui';
 import { Plus, Search, ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
 import type { Page, SessionUser } from '@hub/types';
@@ -8,6 +8,7 @@ import { api } from '../services/api';
 import { display, labels, type Catalog, type Entity } from '../types';
 import { PageHeader, State } from './PageHeader';
 import { EntityForm } from './EntityForm';
+import { useDebounced } from '../services/use-debounced';
 export function ResourceList({
   name,
   catalog,
@@ -18,21 +19,36 @@ export function ResourceList({
   user: SessionUser;
 }) {
   const config = catalog[name];
-  const [params] = useSearchParams();
-  const [query, setQuery] = useState(''),
-    [status, setStatus] = useState(params.get('status') ?? ''),
-    [kind, setKind] = useState(params.get('kind') ?? ''),
-    [sort, setSort] = useState('createdAt'),
-    [page, setPage] = useState(1),
-    [create, setCreate] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const query = params.get('q') ?? '',
+    status = params.get('status') ?? '',
+    kind = params.get('kind') ?? '',
+    sort = params.get('sort') ?? 'createdAt';
+  const page = Math.min(100000, Math.max(1, Math.floor(Number(params.get('page')) || 1)));
+  const [create, setCreate] = useState(false);
+  const settledQuery = useDebounced(query);
+  function filter(key: string, value: string, replace = false) {
+    setParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        if (key !== 'page') next.delete('page');
+        return next;
+      },
+      { replace },
+    );
+  }
   const navigate = useNavigate();
   const result = useQuery({
-    queryKey: ['records', name, query, status, kind, sort, page],
-    queryFn: () =>
+    queryKey: ['records', name, settledQuery, status, kind, sort, page],
+    queryFn: ({ signal }) =>
       api<Page<Entity>>(
-        `records/${name}?q=${encodeURIComponent(query)}&status=${status}&kind=${kind}&sort=${sort}&page=${page}`,
+        `records/${name}?q=${encodeURIComponent(settledQuery)}&status=${encodeURIComponent(status)}&kind=${encodeURIComponent(kind)}&sort=${encodeURIComponent(sort)}&page=${page}`,
+        { signal },
       ),
     enabled: !!config,
+    placeholderData: keepPreviousData,
   });
   if (!config) return <State error message="Este módulo não está disponível para seu perfil." />;
   const canWrite = user.permissions.includes(config.permission + '.write');
@@ -113,8 +129,7 @@ export function ResourceList({
             placeholder={`Buscar ${config.label.toLowerCase()}…`}
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
+              filter('q', e.target.value, true);
             }}
           />
         </label>
@@ -124,8 +139,7 @@ export function ResourceList({
               aria-label="Filtrar por status"
               value={status}
               onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
+                filter('status', e.target.value);
               }}
             >
               <option value="">Todos os status</option>
@@ -143,8 +157,7 @@ export function ResourceList({
               aria-label="Filtrar classificação"
               value={kind}
               onChange={(e) => {
-                setKind(e.target.value);
-                setPage(1);
+                filter('kind', e.target.value);
               }}
             >
               <option value="">Todas as classificações</option>
@@ -153,13 +166,14 @@ export function ResourceList({
               <option value="OUTRA">Outra</option>
             </select>
           )}
-          <select aria-label="Ordenação" value={sort} onChange={(e) => setSort(e.target.value)}>
+          <select
+            aria-label="Ordenação"
+            value={sort}
+            onChange={(e) => filter('sort', e.target.value)}
+          >
             <option value="createdAt">Mais recentes</option>
             {config.columns
-              .filter(
-                (k) =>
-                  !['supplier', 'process', 'proposalItem', 'commitment', 'responsible'].includes(k),
-              )
+              .filter((k) => config.fields.some((f) => f.name === k && !f.ref))
               .map((k) => (
                 <option key={k} value={k}>
                   {labels[k] ?? k}
@@ -167,8 +181,18 @@ export function ResourceList({
               ))}
           </select>
         </div>
+        {(query || status || kind) && (
+          <Button variant="ghost" onClick={() => setParams({})}>
+            Limpar filtros
+          </Button>
+        )}
       </div>
-      <div className="table-panel">
+      <div className="table-panel" aria-busy={result.isFetching}>
+        {result.isFetching && !result.isLoading && (
+          <p className="muted" role="status">
+            Atualizando registros…
+          </p>
+        )}
         {result.isLoading ? (
           <State message="Carregando registros…" />
         ) : result.isError ? (
@@ -223,16 +247,20 @@ export function ResourceList({
             <Button
               variant="ghost"
               aria-label="Página anterior"
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
+              disabled={page === 1 || result.isPlaceholderData}
+              onClick={() => filter('page', String(page - 1))}
             >
               <ChevronLeft size={16} />
             </Button>
             <Button
               variant="ghost"
               aria-label="Próxima página"
-              disabled={!result.data || page * result.data.pageSize >= result.data.total}
-              onClick={() => setPage((p) => p + 1)}
+              disabled={
+                !result.data ||
+                result.isPlaceholderData ||
+                page * result.data.pageSize >= result.data.total
+              }
+              onClick={() => filter('page', String(page + 1))}
             >
               <ChevronRight size={16} />
             </Button>

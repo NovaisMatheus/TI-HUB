@@ -244,7 +244,11 @@ export function EntityDetail({
           >
             Vincular documento ou referência
           </Button>
-          <AcquisitionDocuments documents={entities(row.documents)} user={user} />
+          <AcquisitionDocuments
+            documents={entities(row.documents)}
+            user={user}
+            heading={name === 'maintenance' ? 'Anexos e referências do atendimento' : undefined}
+          />
         </>
       ) : tab === 'Resumo' ? (
         <RecordSummary

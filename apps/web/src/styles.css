@@ -2120,3 +2120,55 @@ pre {
 .account-form small {
   color: var(--muted);
 }
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: var(--accent-soft);
+  color: var(--foreground);
+  font-size: 24px;
+  font-weight: 700;
+}
+.profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+.profile-tags span {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.account-search {
+  display: grid;
+  gap: 6px;
+  max-width: 460px;
+  margin: 14px 0;
+}
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 1000;
+  padding: 12px;
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+.skip-link:focus {
+  top: 12px;
+}
+.entity-title {
+  overflow-wrap: anywhere;
+}

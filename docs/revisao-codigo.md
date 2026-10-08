@@ -50,3 +50,11 @@ Contagens após a limpeza e reexecução do seed padrão: zero equipamentos, zer
 6. Manter GLPI, IA externa, Drive/Docs e launcher identificados como mock/pendentes até integrações reais homologadas.
 
 Para requisitos e critérios de aceitação, consulte [a especificação](especificacao-projeto.md). Para alimentação e manutenção da base, consulte [operação](operacao.md).
+
+## Revisão de perfil e navegação — 08/10/2026
+
+Corrigidos carregamento excessivo de metadados e despachos nas listas de demandas, perda dos filtros ao voltar de um registro, edição de suporte com equipamento nulo e validação de e-mail opcional vazio. Ordenação do servidor inclui desempate por ID. Pesquisa de vínculos permite encontrar registros além da primeira página sem perder a seleção atual.
+
+Módulos passaram a usar carregamento sob demanda, com fallback dentro do conteúdo para preservar o menu. Perfil pessoal inclui campos institucionais, seleção segura sem credenciais e alterações auditadas. Painel inclui atendimentos abertos. O rótulo incorreto de dados fictícios foi retirado do dashboard.
+
+Os seletores de versões e itens específicos mantêm seus escopos de processo/requisição. Login, permissões e integrações externas mantêm seus requisitos existentes.

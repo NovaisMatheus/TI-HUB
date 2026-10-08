@@ -21,6 +21,7 @@ const { AcquisitionController } = require(
 const { DocumentService } = require(resolve('apps/api/dist/documents/document.service.js'));
 const { DocumentController } = require(resolve('apps/api/dist/documents/document.controller.js'));
 const { ResourceService } = require(resolve('apps/api/dist/resources/resource.service.js'));
+const { ResourceController } = require(resolve('apps/api/dist/resources/resource.controller.js'));
 const { RecordHooks } = require(resolve('apps/api/dist/resources/record-hooks.js'));
 const { WorkflowService } = require(resolve('apps/api/dist/acquisitions/workflow.service.js'));
 const { catalog } = require(resolve('apps/api/dist/resources/catalog.js'));
@@ -182,6 +183,29 @@ try {
     workflow = new WorkflowService(db),
     acquisitions = new AcquisitionController(db, hooks);
   const first = await demands.collect(payload, req);
+  const profileController = new ResourceController(resources, db, workflow);
+  await profileController.updateProfile(req, {
+    name: 'Tecnico de verificacao',
+    jobTitle: 'Analista',
+    departmentName: 'Tecnologia',
+    phone: '1234',
+    bio: 'Atendimento e infraestrutura',
+  });
+  const profile = await profileController.profile(req);
+  assert.equal(profile.account.jobTitle, 'Analista');
+  assert.equal(profile.account.phone, '1234');
+  assert.equal(profile.account.passwordHash, undefined);
+  await assert.rejects(profileController.updateProfile(req, { role: 'ADMINISTRADOR' }));
+  await profileController.updateProfile(req, { theme: 'dark' });
+  assert.equal((await profileController.profile(req)).account.departmentName, 'Tecnologia');
+  assert.equal(
+    await db.auditLog.count({ where: { action: 'UPDATE_PROFILE', userId: user.id } }),
+    2,
+  );
+  const demandPage = await resources.list('demands', user, {});
+  assert.equal(demandPage.items[0].metadata, undefined);
+  assert.equal(demandPage.items[0].dispatches, undefined);
+  assert.equal(demandPage.items[0].description, undefined);
   const supportPayload = JSON.parse(
     JSON.stringify({
       ...payload,

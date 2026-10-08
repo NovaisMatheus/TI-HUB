@@ -24,6 +24,8 @@ interface DashboardData {
   inspections: number;
   pops: Entity[];
   recommendations: Entity[];
+  supportOpen: number;
+  supportCases: Entity[];
 }
 export function Dashboard({ user, onSearch }: { user: SessionUser; onSearch: () => void }) {
   const result = useQuery({
@@ -119,6 +121,33 @@ export function Dashboard({ user, onSearch }: { user: SessionUser; onSearch: () 
         ))}
       </div>
       <div className="dashboard-grid">
+        {user.permissions.includes('maintenance.read') && (
+          <section className="workspace-section">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">ATENDIMENTO DA EQUIPE</span>
+                <h2>Suporte em aberto · {data.supportOpen ?? 0}</h2>
+              </div>
+              <Link to="/maintenance">Ver todos →</Link>
+            </div>
+            <div className="process-list">
+              {(data.supportCases ?? []).map((record) => (
+                <Link key={record.id} to={`/maintenance/${record.id}`}>
+                  <Wrench size={18} />
+                  <div>
+                    <strong>{display(object(record.sourceDemand).title ?? record.problem)}</strong>
+                    <small>
+                      {display(object(record.sourceDemand).number)} · {display(record.technician)}
+                    </small>
+                  </div>
+                  <Badge value={String(record.status)} />
+                  <ArrowUpRight size={16} />
+                </Link>
+              ))}
+            </div>
+            {!data.supportCases?.length && <p className="muted">Nenhum atendimento aberto.</p>}
+          </section>
+        )}
         <section className="workspace-section">
           <div className="section-heading">
             <div>
@@ -227,7 +256,7 @@ export function Dashboard({ user, onSearch }: { user: SessionUser; onSearch: () 
       </div>
       <footer className="workspace-footer">
         UGB TI Hub <span>Informação conectada, decisões pela equipe.</span>
-        <span>Ambiente de desenvolvimento · dados fictícios</span>
+        <span>Dados cadastrados pela equipe</span>
       </footer>
     </>
   );

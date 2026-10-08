@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Suspense, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   Wrench,
@@ -25,6 +25,9 @@ import { CommandPalette } from '../components/CommandPalette';
 import { ThemeControl } from '../components/ThemeControl';
 import { ChatPanel } from '../modules/chat/ChatPanel';
 import { send } from '../services/api';
+import { usePersonalPreference } from '../services/use-personal-preference';
+import { RouteBoundary } from '../components/RouteBoundary';
+import { State } from '../components/PageHeader';
 const navigation = [
   { path: '/', label: 'Início', icon: Home },
   { path: '/demands', label: 'Demandas', icon: Inbox },
@@ -48,18 +51,27 @@ export function Workspace({
   searchOpen: boolean;
   setSearchOpen: (v: boolean) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false),
-    [query, setQuery] = useState(''),
+  const [collapsed, setCollapsed] = usePersonalPreference(user.id, 'sidebar-collapsed', false);
+  const [query, setQuery] = useState(''),
     [themeError, setThemeError] = useState('');
-  const [chatOpen, setChatOpen] = useState(
-    () => window.innerWidth >= 1100 || new URLSearchParams(location.search).has('chat'),
+  const [chatOpen, setChatOpen] = usePersonalPreference(
+    user.id,
+    'chat-open',
+    window.innerWidth >= 1100 || new URLSearchParams(location.search).has('chat'),
   );
+  const currentLocation = useLocation();
+  const currentModule =
+    navigation.find((item) => item.path !== '/' && currentLocation.pathname.startsWith(item.path))
+      ?.label ?? (currentLocation.pathname === '/profile' ? 'Meu perfil' : 'Início');
   const canChat = user.permissions.includes('chat.read');
   const navigate = useNavigate();
   return (
     <div
       className={`workspace ${collapsed ? 'sidebar-collapsed' : ''} ${canChat && chatOpen ? 'chat-open' : ''}`}
     >
+      <a className="skip-link" href="#main-content">
+        Ir para o conteúdo
+      </a>
       <aside className="sidebar">
         <Link className="brand" to="/">
           <span className="brand-icon">
@@ -122,7 +134,8 @@ export function Workspace({
               {user.name
                 .split(' ')
                 .map((n) => n[0])
-                .slice(0, 2)
+                .filter(Boolean)
+                .filter((_n, i, names) => i === 0 || i === names.length - 1)
                 .join('')}
             </span>
             {!collapsed && (
@@ -145,7 +158,7 @@ export function Workspace({
       <div className="workspace-body">
         <header className="topbar">
           <div className="breadcrumb">
-            Workspace <span>/</span> <strong>UGB TI Hub</strong>
+            UGB TI Hub <span>/</span> <strong>{currentModule}</strong>
           </div>
           <div>
             <form
@@ -196,8 +209,12 @@ export function Workspace({
           </div>
         </header>
         {themeError && <p className="notice">{themeError}</p>}
-        <main className="main-content">
-          <Outlet />
+        <main className="main-content" id="main-content" tabIndex={-1}>
+          <RouteBoundary>
+            <Suspense fallback={<State message="Carregando módulo…" />}>
+              <Outlet />
+            </Suspense>
+          </RouteBoundary>
         </main>
       </div>
       <CommandPalette open={searchOpen} setOpen={setSearchOpen} query={query} setQuery={setQuery} />

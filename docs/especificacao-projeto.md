@@ -142,3 +142,13 @@ Veja também [operação](operacao.md), [revisão de código](revisao-codigo.md)
 ## Integração com suporte — 08/10/2026
 
 RF-07 e RF-12: classificação SUPORTE gera um atendimento único em /maintenance, inclusive para demandas anteriores por sincronização autenticada. Equipamento opcional; diagnóstico, procedimento e solução manuais são preservados nas recoletas. Situação e observações internas são sincronizadas nas duas telas. Origem, despachos, anexos e timeline interativa com descrição breve local ficam disponíveis no atendimento. Oitava migration: 20261008150000_support_demand_bridge.
+
+## Perfil e navegação — 08/10/2026
+
+Meu perfil permite editar nome, cargo/função, setor, telefone/ramal e apresentação. Usuário, e-mail e permissões continuam sob gestão administrativa. Campos novos são opcionais; o perfil não publica credenciais. Alterações pessoais e de tema são auditadas. Migração 20261008160000_user_profile (nona migração).
+
+Busca, situação, classificação, ordenação e página das listas são preservadas na URL. Buscas aguardam 250 ms após a digitação e cancelam requisições superadas. Paginação conserva os dados anteriores enquanto atualiza. As demandas carregam apenas informações da lista; conteúdo completo e despachos são obtidos nos detalhes. A pesquisa de suporte/aquisições também considera número, título e despachos do documento original.
+
+Seletores de vínculos têm pesquisa no servidor e preservam a seleção atual mesmo fora dos primeiros 100 registros. Suporte sem equipamento pode ser editado; vínculo de equipamento pode ser removido. E-mail opcional vazio não bloqueia o formulário.
+
+O painel inicial apresenta atendimentos de suporte abertos. Menu e chat guardam sua preferência de abertura por usuário neste navegador. Módulos são carregados conforme a navegação; o menu permanece disponível durante o carregamento. Erros de conexão apresentam mensagem legível, e falhas de tela oferecem recuperação.

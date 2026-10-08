@@ -71,7 +71,37 @@ export class ResourceController {
           ? this.db.technicalRecommendation.findMany({ take: 3, orderBy: { updatedAt: 'desc' } })
           : [],
       ]);
-    return { equipment, maintenance, processes, analyses, inspections, pops, recommendations };
+    const [supportOpen, supportCases] = await Promise.all([
+      allowed('maintenance')
+        ? this.db.maintenanceRecord.count({ where: { status: { not: 'CONCLUIDA' } } })
+        : 0,
+      allowed('maintenance')
+        ? this.db.maintenanceRecord.findMany({
+            where: { status: { not: 'CONCLUIDA' } },
+            select: {
+              id: true,
+              problem: true,
+              status: true,
+              updatedAt: true,
+              sourceDemand: { select: { title: true, number: true } },
+              technician: { select: { name: true } },
+            },
+            take: 5,
+            orderBy: { updatedAt: 'desc' },
+          })
+        : [],
+    ]);
+    return {
+      equipment,
+      maintenance,
+      processes,
+      analyses,
+      inspections,
+      pops,
+      recommendations,
+      supportOpen,
+      supportCases,
+    };
   }
   @Get('search') searchRecords(@Query('q') q: string, @Req() req: AuthRequest) {
     return this.search.search((q ?? '').slice(0, 500), req.user);
@@ -166,7 +196,27 @@ export class ResourceController {
       where: { userId: req.user.id },
       select: { provider: true, model: true, enabled: true },
     });
-    return { ai: config ?? { provider: 'mock', model: 'retrieval-mock', enabled: true } };
+    const user = await this.db.user.findUniqueOrThrow({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        jobTitle: true,
+        departmentName: true,
+        phone: true,
+        bio: true,
+        createdAt: true,
+        theme: true,
+        userRole_user: { select: { role: { select: { name: true } } } },
+      },
+    });
+    const { userRole_user, ...account } = user;
+    return {
+      account: { ...account, roles: userRole_user.map((r) => r.role.name) },
+      ai: config ?? { provider: 'mock', model: 'retrieval-mock', enabled: true },
+    };
   }
   @Patch('profile') async updateProfile(@Req() req: AuthRequest, @Body() body: unknown) {
     const data = validate(
@@ -174,18 +224,48 @@ export class ResourceController {
         .object({
           theme: z.enum(['light', 'dark', 'system']).optional(),
           aiEnabled: z.boolean().optional(),
+          name: z.string().trim().min(2).max(150).optional(),
+          jobTitle: z.string().trim().max(120).optional(),
+          departmentName: z.string().trim().max(150).optional(),
+          phone: z.string().trim().max(40).optional(),
+          bio: z.string().trim().max(1000).optional(),
         })
         .strict(),
       body,
     );
-    if (data.theme)
-      await this.db.user.update({ where: { id: req.user.id }, data: { theme: data.theme } });
-    if (data.aiEnabled !== undefined)
-      await this.db.aIConfiguration.upsert({
-        where: { userId: req.user.id },
-        create: { userId: req.user.id, enabled: data.aiEnabled },
-        update: { enabled: data.aiEnabled },
-      });
+    const { aiEnabled, ...account } = data;
+    await this.db.$transaction(async (tx) => {
+      if (Object.keys(account).length) {
+        const before = await tx.user.findUniqueOrThrow({
+          where: { id: req.user.id },
+          select: {
+            name: true,
+            jobTitle: true,
+            departmentName: true,
+            phone: true,
+            bio: true,
+            theme: true,
+          },
+        });
+        await tx.user.update({ where: { id: req.user.id }, data: account });
+        await tx.auditLog.create({
+          data: {
+            userId: req.user.id,
+            action: 'UPDATE_PROFILE',
+            entityType: 'User',
+            entityId: req.user.id,
+            before,
+            after: account,
+          },
+        });
+      }
+      if (aiEnabled !== undefined)
+        await tx.aIConfiguration.upsert({
+          where: { userId: req.user.id },
+          create: { userId: req.user.id, enabled: aiEnabled },
+          update: { enabled: aiEnabled },
+        });
+    });
     return { success: true };
   }
   @Permission('admin.audit.read') @Get('audit') async audit(

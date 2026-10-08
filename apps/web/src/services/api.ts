@@ -13,12 +13,22 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options.headers },
   });
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') ?? '';
+  const data = contentType.includes('json') ? await response.json() : null;
   if (!response.ok)
     throw new ApiError(
-      typeof data.message === 'string' ? data.message : 'Não foi possível concluir a operação.',
+      typeof data?.message === 'string'
+        ? data.message
+        : response.status >= 500
+          ? 'O serviço está temporariamente indisponível. Tente novamente em instantes.'
+          : 'Não foi possível concluir a operação.',
       response.status,
-      data.fields,
+      data?.fields,
+    );
+  if (response.status !== 204 && !contentType.includes('json'))
+    throw new ApiError(
+      'O servidor retornou uma resposta inesperada. Atualize a página e tente novamente.',
+      response.status,
     );
   return data as T;
 }
