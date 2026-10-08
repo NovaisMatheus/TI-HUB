@@ -10,6 +10,7 @@ import { PageHeader, State } from './PageHeader';
 import { EntityForm } from './EntityForm';
 import { RecordSummary } from './RecordSummary';
 import { RecordTabs } from './RecordTabs';
+import { AcquisitionTimeline } from '../modules/acquisitions/AcquisitionTimeline';
 import {
   AcquisitionWorkspace,
   AcquisitionDocuments,
@@ -219,7 +220,9 @@ export function EntityDetail({
           </button>
         ))}
       </div>
-      {name === 'acquisitions' && ['Resumo', 'Origem e despachos'].includes(tab) ? (
+      {name === 'acquisitions' && tab === 'Timeline' ? (
+        <AcquisitionTimeline row={row} />
+      ) : name === 'acquisitions' && ['Resumo', 'Origem e despachos'].includes(tab) ? (
         <AcquisitionWorkspace
           key={`${id}-${tab}`}
           row={row}

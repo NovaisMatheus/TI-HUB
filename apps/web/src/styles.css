@@ -1223,6 +1223,29 @@ tbody tr:hover {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.timeline-controls label {
+  display: grid;
+  gap: 6px;
+}
+.timeline-controls label:first-child {
+  flex: 1;
+  min-width: 200px;
+}
+.timeline-dispatch summary {
+  cursor: pointer;
+  margin: 12px 0;
+  font-weight: 600;
+}
+.timeline-dispatch {
+  padding: 10px 0;
+}
 .acquisition-review {
   display: grid;
   gap: 16px;

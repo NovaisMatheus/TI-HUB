@@ -11,6 +11,7 @@ import { catalog, Resource, resourceSchema } from './catalog';
 import { validate } from '../common/validation';
 import { RecordHooks } from './record-hooks';
 import { canAccess } from './access';
+import { acquisitionTimeline } from '../acquisitions/timeline';
 export interface Row {
   id: string;
   [key: string]: unknown;
@@ -164,6 +165,15 @@ export class ResourceService {
             })
           : [],
       };
+    if (name === 'acquisitions') {
+      const source = related.sourceDemand as {
+        dispatches: Parameters<typeof acquisitionTimeline>[1];
+      } | null;
+      related.timeline = acquisitionTimeline(
+        related.timeline as Parameters<typeof acquisitionTimeline>[0],
+        source?.dispatches ?? [],
+      );
+    }
     if (name === 'analyses' && user.permissions.includes('documents.read')) {
       const proposalItem = await this.db.proposalItem.findUniqueOrThrow({
         where: { id: String(item.proposalItemId) },

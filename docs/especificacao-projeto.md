@@ -61,6 +61,8 @@ Aquisições importadas criam requisição, descritivo e processo vinculados à 
 
 ## 5. Extensão Chrome e demandas
 
+A timeline dos processos combina eventos do Hub e publicações dos despachos importados. A data/hora é obtida do campo de publicação do 1Doc e interpretada no fuso America/Sao_Paulo; datas ausentes ou inválidas ficam identificadas, sem substituir pela data da coleta. A interface oferece pesquisa no conteúdo/autor, filtro por origem, ordem cronológica/reversa e expansão do texto completo, participantes, assinatura e anexos. Descrições breves usam trechos automáticos locais, sem modelo generativo; não presumem o conteúdo de anexos. A atualização da coleta mantém a identidade do despacho, sem novos eventos duplicados.
+
 Manifest V3, com popup da extensão e botão flutuante na página HTTPS do 1Doc. O usuário configura a URL do Hub e uma credencial pessoal gerada em Meu perfil. A credencial dura 30 dias, pode ser revogada e é armazenada como hash no servidor.
 
 Fluxo: abrir documento no 1Doc → Coletar → revisar resumo e classificação → Salvar ou Atualizar → abrir a demanda no Hub. Coletar não salva automaticamente. O botão flutuante é isolado por Shadow DOM, e o service worker aceita mensagens somente da extensão ou do frame principal de páginas 1Doc permitidas.

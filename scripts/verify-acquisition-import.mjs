@@ -188,6 +188,17 @@ try {
   assert.equal(await db.purchaseProcess.count(), 1);
   const detail = await resources.get('acquisitions', first.acquisitionId, user);
   assert.equal(detail.sourceDemand.dispatches.length, payload.dispatches.length);
+  const publications = detail.timeline.filter((event) => event.eventType === 'DISPATCH_PUBLISHED');
+  assert.equal(publications.length, payload.dispatches.length);
+  assert.equal(
+    publications.find((event) => event.dispatch.sourceId === payload.dispatches[0].sourceId)
+      .dateLabel,
+    payload.dispatches[0].dateLabel,
+  );
+  assert.equal(
+    (await resources.get('acquisitions', first.acquisitionId, user)).timeline.length,
+    detail.timeline.length,
+  );
   assert.equal(detail.request.purchaseRequestItem_request[0].quantity, null);
   assert.match(detail.request.purchaseRequestItem_request[0].specificationVersion.content, /16 GB/);
   assert.ok(detail.documents.some((doc) => doc.file?.extractedText.includes('3500')));

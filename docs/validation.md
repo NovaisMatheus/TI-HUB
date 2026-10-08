@@ -1,5 +1,9 @@
 # Validação da primeira iteração
 
+## Timeline dos despachos · 8 de outubro de 2026
+
+64 testes aprovados, incluindo datas/horas de publicação, fuso de São Paulo e horário de verão histórico, datas inválidas/ausentes, ordenação sem duplicação, descrições locais e interação com filtros/pesquisa/expansão. Teste em banco e API isolados confirma um evento por despacho. A timeline é derivada dos despachos persistidos: nenhuma migração ou coleta adicional é necessária para despachos que já possuem data e conteúdo. O resumo local foi escolhido pelo usuário; IA generativa não é utilizada nesta função.
+
 ## Integração das aquisições importadas · 8 de outubro de 2026
 
 - Migrações de vínculo demanda/processo, quantidade e setor pendentes, categoria documental, referências por requisito e armazenamento de arquivos aplicadas à base local, com backup prévio.
