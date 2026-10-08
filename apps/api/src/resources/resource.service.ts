@@ -27,6 +27,16 @@ export function delegate(db: Prisma.TransactionClient, model: string): Delegate 
 }
 export const json = (value: unknown): Prisma.InputJsonValue =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+const fileInfo = {
+  select: {
+    id: true,
+    name: true,
+    mimeType: true,
+    size: true,
+    extractionStatus: true,
+    extractedText: true,
+  },
+};
 @Injectable()
 export class ResourceService {
   constructor(
@@ -93,7 +103,10 @@ export class ResourceService {
     if (name === 'documents' && !canAccess(String(item.entityType), user))
       throw new ForbiddenException('Documento vinculado a módulo não autorizado.');
     const documents = user.permissions.includes('documents.read')
-      ? await this.db.documentReference.findMany({ where: { entityType: name, entityId: id } })
+      ? await this.db.documentReference.findMany({
+          where: { entityType: name, entityId: id },
+          include: { file: fileInfo },
+        })
       : [];
     let related: Record<string, unknown> = {};
     if (name === 'equipment' && user.permissions.includes('maintenance.read'))
@@ -106,6 +119,25 @@ export class ResourceService {
       };
     if (name === 'acquisitions')
       related = {
+        request: await this.db.purchaseRequest.findUnique({
+          where: { id: String(item.requestId) },
+          include: {
+            department: true,
+            purchaseRequestItem_request: {
+              include: {
+                specificationVersion: {
+                  include: { specification: true, specificationRequirement_version: true },
+                },
+              },
+            },
+          },
+        }),
+        sourceDemand: item.sourceDemandId
+          ? await this.db.demand.findUnique({
+              where: { id: String(item.sourceDemandId) },
+              include: { dispatches: { orderBy: { sequence: 'asc' } } },
+            })
+          : null,
         timeline: await this.db.timelineEvent.findMany({
           where: { processId: id },
           include: { supplier: true, user: { select: { name: true } } },
@@ -132,6 +164,29 @@ export class ResourceService {
             })
           : [],
       };
+    if (name === 'analyses' && user.permissions.includes('documents.read')) {
+      const proposalItem = await this.db.proposalItem.findUniqueOrThrow({
+        where: { id: String(item.proposalItemId) },
+        include: {
+          proposal: { include: { process: true } },
+          requestItem: { include: { specificationVersion: true } },
+        },
+      });
+      related.contextDocuments = await this.db.documentReference.findMany({
+        include: { file: fileInfo },
+        where: {
+          OR: [
+            { entityType: 'acquisitions', entityId: proposalItem.proposal.processId },
+            { entityType: 'requests', entityId: proposalItem.proposal.process.requestId },
+            { entityType: 'proposals', entityId: proposalItem.proposalId },
+            {
+              entityType: 'specifications',
+              entityId: proposalItem.requestItem.specificationVersion.specificationId,
+            },
+          ],
+        },
+      });
+    }
     if (name === 'suppliers')
       related = {
         proposals: await this.db.proposal.findMany({
@@ -178,11 +233,22 @@ export class ResourceService {
       { timeout: 15000 },
     );
   }
-  async lookup(name: string, user: SessionUser) {
+  async lookup(
+    name: string,
+    user: SessionUser,
+    scope: { processId?: string; requestId?: string } = {},
+  ) {
     if (!user.permissions.includes('acquisition.read')) throw new ForbiddenException();
+    const requestId = scope.processId
+      ? (await this.db.purchaseProcess.findUniqueOrThrow({ where: { id: scope.processId } }))
+          .requestId
+      : scope.requestId;
     if (name === 'specification-versions')
       return (
         await this.db.specificationVersion.findMany({
+          ...(requestId
+            ? { where: { purchaseRequestItem_specificationVersion: { some: { requestId } } } }
+            : {}),
           include: { specification: true },
           take: 100,
           orderBy: { createdAt: 'desc' },
@@ -193,7 +259,11 @@ export class ResourceService {
       }));
     if (name === 'request-items')
       return (
-        await this.db.purchaseRequestItem.findMany({ include: { request: true }, take: 100 })
+        await this.db.purchaseRequestItem.findMany({
+          where: requestId ? { requestId } : {},
+          include: { request: true },
+          take: 100,
+        })
       ).map((r) => ({
         id: r.id,
         label: `REQ ${r.request.number}/${r.request.year} · ${r.description}`,
@@ -201,6 +271,7 @@ export class ResourceService {
     if (name === 'proposal-items')
       return (
         await this.db.proposalItem.findMany({
+          where: scope.processId ? { proposal: { processId: scope.processId } } : {},
           include: { proposal: { include: { supplier: true, process: true } } },
           take: 100,
         })

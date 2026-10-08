@@ -4,6 +4,7 @@ import { PrismaService } from '../common/prisma.service';
 import { catalog } from '../resources/catalog';
 import { delegate } from '../resources/resource.service';
 import { canAccess } from '../resources/access';
+import { aiPolicy } from './ai-policy';
 @Injectable()
 export class SearchService {
   constructor(private readonly db: PrismaService) {}
@@ -11,7 +12,7 @@ export class SearchService {
     const name = source.href.split('/')[1];
     if (!canAccess(name, user)) return false;
     const row = await delegate(this.db, catalog[name].model).findUnique({
-      where: { id: source.id },
+      where: { id: source.id, ...aiPolicy(name) },
     });
     return (
       !!row &&
@@ -82,21 +83,7 @@ export class SearchService {
               },
             },
           );
-      const policy =
-        ai &&
-        [
-          'equipment',
-          'maintenance',
-          'knowledge',
-          'recommendations',
-          'solutions',
-          'acquisitions',
-          'analyses',
-          'documents',
-          'demands',
-        ].includes(name)
-          ? { dataPolicy: { not: 'NO_AI' } }
-          : {};
+      const policy = ai ? aiPolicy(name) : {};
       const rows = await delegate(this.db, config.model).findMany({
         where: {
           ...policy,

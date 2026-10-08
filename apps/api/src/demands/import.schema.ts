@@ -16,7 +16,17 @@ const link = z
     return !!url && url.protocol === 'https:' && !url.username && !url.password;
   }, 'Link deve usar HTTPS.');
 const attachment = z
-  .object({ name: text, url: link, kind: z.enum(['file', 'image', 'link']), details: text })
+  .object({
+    name: text,
+    url: link,
+    kind: z.enum(['file', 'image', 'link']),
+    details: text,
+    fileId: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .optional(),
+    extractionStatus: text.optional(),
+  })
   .strict();
 const participant = z.object({ name: text, department: text, role: text, sourceId: text }).strict();
 const field = z.object({ label: text, value: z.string().max(20000) }).strict();

@@ -15,6 +15,9 @@ import { ConnectionService } from './equipment/connection.service';
 import { DemandController } from './demands/demand.controller';
 import { ChatController } from './chat/chat.controller';
 import { GoogleChatService } from './chat/google-chat.service';
+import { AcquisitionController } from './acquisitions/acquisition.controller';
+import { DocumentController } from './documents/document.controller';
+import { DocumentService } from './documents/document.service';
 @Module({
   imports: [
     JwtModule.register({ secret: process.env.JWT_SECRET, signOptions: { expiresIn: '8h' } }),
@@ -25,6 +28,8 @@ import { GoogleChatService } from './chat/google-chat.service';
     ResourceController,
     DemandController,
     ChatController,
+    AcquisitionController,
+    DocumentController,
   ],
   providers: [
     PrismaService,
@@ -35,6 +40,7 @@ import { GoogleChatService } from './chat/google-chat.service';
     SearchService,
     ConnectionService,
     GoogleChatService,
+    DocumentService,
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
 })

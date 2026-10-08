@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { SessionUser } from '@hub/types';
+import { syncAcquisitionDemand } from '../acquisitions/demand-bridge';
 function take(data: Record<string, unknown>, names: string[]) {
   const out: Record<string, unknown> = {};
   for (const n of names) {
@@ -19,9 +20,15 @@ export class RecordHooks {
     user: SessionUser,
   ) {
     const data = { ...input };
-    if (id && name === 'requests' && (await tx.purchaseProcess.count({ where: { requestId: id } })))
+    if (id && name === 'requests')
+      await tx.$queryRaw`SELECT "id" FROM "PurchaseProcess" WHERE "requestId" = ${id} ORDER BY "id" FOR UPDATE`;
+    if (
+      id &&
+      name === 'requests' &&
+      (await tx.proposal.count({ where: { process: { requestId: id } } }))
+    )
       throw new BadRequestException(
-        'Requisição vinculada a processo. Preserve os itens e registre uma nova requisição.',
+        'Requisição com propostas recebidas. Preserve os itens e registre uma nova requisição.',
       );
     if (
       id &&
@@ -77,6 +84,9 @@ export class RecordHooks {
         maintenance: 'maintenanceRecord',
         knowledge: 'knowledgeArticle',
         recommendations: 'technicalRecommendation',
+        demands: 'demand',
+        requests: 'purchaseRequest',
+        specifications: 'technicalSpecification',
         acquisitions: 'purchaseProcess',
         suppliers: 'supplier',
         proposals: 'proposal',
@@ -85,15 +95,17 @@ export class RecordHooks {
         inspections: 'technicalInspection',
       };
       const permission =
-        targetType === 'analyses'
-          ? 'analysis'
-          : targetType === 'inspections'
-            ? 'inspection'
-            : ['equipment', 'maintenance', 'knowledge', 'recommendations'].includes(targetType)
-              ? targetType === 'recommendations'
-                ? 'knowledge'
-                : targetType
-              : 'acquisition';
+        targetType === 'demands'
+          ? 'demands'
+          : targetType === 'analyses'
+            ? 'analysis'
+            : targetType === 'inspections'
+              ? 'inspection'
+              : ['equipment', 'maintenance', 'knowledge', 'recommendations'].includes(targetType)
+                ? targetType === 'recommendations'
+                  ? 'knowledge'
+                  : targetType
+                : 'acquisition';
       if (!user.permissions.includes(permission + '.read'))
         throw new BadRequestException('Vínculo não autorizado.');
       const model = (
@@ -162,7 +174,10 @@ export class RecordHooks {
         const existing = id
           ? await tx.purchaseRequestItem.findFirst({ where: { requestId: id } })
           : null;
-        const values = { ...item, description: data.object ?? 'Item adicional' };
+        const values = {
+          ...item,
+          description: data.object ?? existing?.description ?? 'Item adicional',
+        };
         data.purchaseRequestItem_request = existing
           ? { update: { where: { id: existing.id }, data: values } }
           : { create: values };
@@ -191,6 +206,7 @@ export class RecordHooks {
       if (Object.keys(item).length) {
         const existing = id ? await tx.proposalItem.findFirst({ where: { proposalId: id } }) : null;
         const processId = data.processId ?? parent?.processId;
+        await tx.$queryRaw`SELECT "id" FROM "PurchaseProcess" WHERE "id" = ${String(processId)} FOR UPDATE`;
         const process = await tx.purchaseProcess.findUnique({
           where: { id: String(processId) },
         });
@@ -205,6 +221,7 @@ export class RecordHooks {
       }
     }
     if (name === 'analyses') {
+      await tx.$queryRaw`SELECT "id" FROM "PurchaseProcess" WHERE "id" = ${String(data.processId)} FOR UPDATE`;
       const item = await tx.proposalItem.findUnique({
         where: { id: String(data.proposalItemId) },
         include: { proposal: true, requestItem: true },
@@ -304,6 +321,7 @@ export class RecordHooks {
     input: Record<string, unknown>,
     user: SessionUser,
   ) {
+    if (name === 'demands') await syncAcquisitionDemand(tx, item.id, user.id);
     if (name === 'equipment' && before && (before as { status: string }).status !== item.status)
       await tx.equipmentStatusHistory.create({
         data: {

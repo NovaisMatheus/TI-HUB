@@ -10,6 +10,10 @@ import { PageHeader, State } from './PageHeader';
 import { EntityForm } from './EntityForm';
 import { RecordSummary } from './RecordSummary';
 import { RecordTabs } from './RecordTabs';
+import {
+  AcquisitionWorkspace,
+  AcquisitionDocuments,
+} from '../modules/acquisitions/AcquisitionWorkspace';
 export function EntityDetail({
   name,
   id,
@@ -78,11 +82,27 @@ export function EntityDetail({
     name === 'equipment'
       ? ['Resumo', 'Hardware', 'Rede', 'Histórico', 'Documentos', 'GLPI', 'Observações']
       : name === 'acquisitions'
-        ? ['Resumo', 'Propostas', 'Análises', 'Empenhos', 'Conferências', 'Timeline', 'Documentos']
+        ? [
+            'Resumo',
+            'Origem e despachos',
+            'Propostas',
+            'Análises',
+            'Empenhos',
+            'Conferências',
+            'Timeline',
+            'Documentos',
+          ]
         : ['Resumo', 'Documentos', ...(versions.length ? ['Versões'] : [])];
   const createDefaults: Record<string, unknown> = {};
   if (create === 'maintenance') createDefaults.equipmentId = id;
-  if (create === 'proposals') createDefaults.processId = id;
+  if (create === 'proposals') {
+    createDefaults.processId = id;
+    const requested = entities(object(row.request).purchaseRequestItem_request)[0];
+    if (requested) {
+      createDefaults.requestItemId = requested.id;
+      createDefaults.quantity = requested.quantity;
+    }
+  }
   if (create === 'analyses') createDefaults.processId = id;
   if (create === 'commitments') {
     createDefaults.processId = id;
@@ -92,6 +112,10 @@ export function EntityDetail({
   if (create === 'documents') {
     createDefaults.entityType = name;
     createDefaults.entityId = id;
+    createDefaults.mimeType = 'text/html';
+    createDefaults.provider = 'URL';
+    createDefaults.description = 'Referência técnica';
+    createDefaults.category = 'REFERENCIA';
   }
   if (create === 'recommendations') {
     createDefaults.maintenanceId = id;
@@ -195,7 +219,25 @@ export function EntityDetail({
           </button>
         ))}
       </div>
-      {tab === 'Resumo' ? (
+      {name === 'acquisitions' && ['Resumo', 'Origem e despachos'].includes(tab) ? (
+        <AcquisitionWorkspace
+          key={`${id}-${tab}`}
+          row={row}
+          user={user}
+          sourceOnly={tab === 'Origem e despachos'}
+        />
+      ) : name === 'acquisitions' && tab === 'Documentos' ? (
+        <>
+          <Button
+            variant="outline"
+            onClick={() => setCreate('documents')}
+            disabled={!user.permissions.includes('documents.write')}
+          >
+            Vincular documento ou referência
+          </Button>
+          <AcquisitionDocuments documents={entities(row.documents)} user={user} />
+        </>
+      ) : tab === 'Resumo' ? (
         <RecordSummary
           name={name}
           id={id}

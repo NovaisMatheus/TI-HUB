@@ -1,4 +1,4 @@
-import { useForm, Controller, type Control } from 'react-hook-form';
+import { useForm, useWatch, Controller, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,11 +17,18 @@ function RelationField({
   const special = ['specification-versions', 'request-items', 'proposal-items'].includes(
     field.ref ?? '',
   );
+  const processId = useWatch({ control, name: 'processId' });
+  const requestId = useWatch({ control, name: 'requestId' });
+  const scope = processId
+    ? `?processId=${encodeURIComponent(String(processId))}`
+    : requestId
+      ? `?requestId=${encodeURIComponent(String(requestId))}`
+      : '';
   const query = useQuery<Page<Entity> | { id: string; label: string }[]>({
-    queryKey: ['options', field.ref],
+    queryKey: ['options', field.ref, special ? scope : ''],
     queryFn: async () =>
       special
-        ? await api<{ id: string; label: string }[]>(`lookups/${field.ref}`)
+        ? await api<{ id: string; label: string }[]>(`lookups/${field.ref}${scope}`)
         : await api<Page<Entity>>(`records/${field.ref}?pageSize=100`),
   });
   const options = special

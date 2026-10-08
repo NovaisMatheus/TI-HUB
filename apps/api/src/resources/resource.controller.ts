@@ -231,8 +231,21 @@ export class ResourceController {
       ],
     };
   }
-  @Get('lookups/:name') lookup(@Param('name') name: string, @Req() req: AuthRequest) {
-    return this.service.lookup(name, req.user);
+  @Get('lookups/:name') lookup(
+    @Param('name') name: string,
+    @Query() query: unknown,
+    @Req() req: AuthRequest,
+  ) {
+    const scope = validate(
+      z
+        .object({
+          processId: z.string().max(100).optional(),
+          requestId: z.string().max(100).optional(),
+        })
+        .strict(),
+      query,
+    );
+    return this.service.lookup(name, req.user, scope);
   }
   @Permission('analysis.write') @Patch('analyses/:id/evaluate') evaluate(
     @Param('id') id: string,

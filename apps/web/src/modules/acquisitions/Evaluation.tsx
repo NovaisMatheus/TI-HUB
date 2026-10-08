@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Badge, Button } from '@hub/ui';
 import { send } from '../../services/api';
 import { display, entities, object, type Entity } from '../../types';
+import { AcquisitionDocuments } from './AcquisitionWorkspace';
 export function Evaluation({
   item,
   inspection = false,
@@ -28,7 +29,18 @@ export function Evaluation({
     try {
       await send(
         `${inspection ? 'inspections' : 'analyses'}/${item.id}/evaluate`,
-        { ...data, [inspection ? 'itemId' : 'resultId']: row.id },
+        {
+          ...data,
+          ...(!inspection
+            ? {
+                referenceUrls: String(data.referenceUrls ?? '')
+                  .split('\n')
+                  .map((url) => url.trim())
+                  .filter(Boolean),
+              }
+            : {}),
+          [inspection ? 'itemId' : 'resultId']: row.id,
+        },
         'PATCH',
       );
       await client.invalidateQueries();
@@ -79,6 +91,12 @@ export function Evaluation({
           </span>
         ))}
       </div>
+      {!inspection && !!entities(item.contextDocuments).length && (
+        <AcquisitionDocuments
+          documents={entities(item.contextDocuments)}
+          user={{ permissions: ['documents.read'] }}
+        />
+      )}
       <div className="requirements">
         {rows.map((row) => {
           const requirement = object(row.requirement),
@@ -157,6 +175,27 @@ export function Evaluation({
                         disabled={!canWrite || closed}
                       />
                     </label>
+                    <label>
+                      Links de referência / evidência (um por linha)
+                      <textarea
+                        name="referenceUrls"
+                        defaultValue={
+                          Array.isArray(row.referenceUrls) ? row.referenceUrls.join('\n') : ''
+                        }
+                        disabled={!canWrite || closed}
+                      />
+                    </label>
+                    {Array.isArray(row.referenceUrls) &&
+                      row.referenceUrls.map((url) => (
+                        <a
+                          key={String(url)}
+                          href={String(url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Abrir referência ↗
+                        </a>
+                      ))}
                   </>
                 )}
                 <div className="evaluation-action">

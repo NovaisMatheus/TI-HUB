@@ -82,6 +82,7 @@ describe('Edições parciais preservam vínculos e versões', () => {
   });
   it('valida o item existente ao editar somente o preço de uma proposta', async () => {
     const tx = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
       technicalAnalysis: { count: vi.fn().mockResolvedValue(0) },
       proposal: {
         findUniqueOrThrow: vi
@@ -131,13 +132,11 @@ describe('Edições parciais preservam vínculos e versões', () => {
     const tx = {
       technicalInspection: { count: vi.fn().mockResolvedValue(0) },
       commitment: {
-        findUniqueOrThrow: vi
-          .fn()
-          .mockResolvedValue({
-            processId: 'process',
-            requestId: 'request',
-            supplierId: 'supplier',
-          }),
+        findUniqueOrThrow: vi.fn().mockResolvedValue({
+          processId: 'process',
+          requestId: 'request',
+          supplierId: 'supplier',
+        }),
       },
       commitmentItem: {
         findFirst: vi.fn().mockResolvedValue({ id: 'item', proposalItemId: 'proposed' }),

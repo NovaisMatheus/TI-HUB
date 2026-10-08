@@ -104,10 +104,11 @@
         const result = await chrome.runtime.sendMessage({
           type: 'IMPORT_1DOC',
           payload: { ...captured, kind: kind.value },
+          downloadLinks: globalThis.ugbOneDocDownloadLinks?.() || [],
         });
         if (!result.ok) throw new Error(result.error);
         save.textContent = 'Atualizar demanda';
-        notice.textContent = `Demanda ${result.data.created ? 'salva' : 'atualizada'}. ${result.data.dispatches} despachos preservados.`;
+        notice.textContent = `Demanda ${result.data.created ? 'salva' : 'atualizada'}. ${result.data.dispatches} despachos preservados.\n${(result.data.warnings || []).join('\n')}`;
       } catch (error) {
         notice.textContent = error.message || 'Falha ao salvar.';
       } finally {

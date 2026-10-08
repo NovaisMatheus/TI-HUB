@@ -102,6 +102,7 @@ model Demand {
   metadata     Json
   dispatches   DemandDispatch[]
   snapshots    DemandSnapshot[]
+  acquisitionProcess PurchaseProcess?
   @@unique([sourceHost, sourceId])
   @@index([status])
   @@index([kind])
@@ -492,8 +493,8 @@ model PurchaseRequest {
   description                 String
   date                        DateTime              @default(now())
   status                      String                @default("RECEBIDA")
-  departmentId                String
-  department                  Department            @relation("PurchaseRequest_department", fields: [departmentId], references: [id])
+  departmentId                String?
+  department                  Department?           @relation("PurchaseRequest_department", fields: [departmentId], references: [id])
   responsibleId               String
   responsible                 User                  @relation("PurchaseRequest_responsible", fields: [responsibleId], references: [id])
   purchaseRequestItem_request PurchaseRequestItem[] @relation("PurchaseRequestItem_request")
@@ -510,7 +511,7 @@ model PurchaseRequestItem {
   createdAt                DateTime             @default(now())
   updatedAt                DateTime             @updatedAt
   description              String
-  quantity                 Int
+  quantity                 Int?
   requestId                String
   request                  PurchaseRequest      @relation("PurchaseRequestItem_request", fields: [requestId], references: [id])
   specificationVersionId   String
@@ -538,6 +539,8 @@ model PurchaseProcess {
   technicalAnalysis_process TechnicalAnalysis[] @relation("TechnicalAnalysis_process")
   commitment_process        Commitment[]        @relation("Commitment_process")
   timelineEvent_process     TimelineEvent[]     @relation("TimelineEvent_process")
+  sourceDemandId            String?             @unique
+  sourceDemand              Demand?             @relation(fields: [sourceDemandId], references: [id])
 
   @@index([requestId])
   @@index([responsibleId])
@@ -614,6 +617,7 @@ model AnalysisRequirementResult {
   offered          String                   @default("")
   reason           String                   @default("")
   equivalenceNotes String                   @default("")
+  referenceUrls    String[]                 @default([])
   analysisId       String
   analysis         TechnicalAnalysis        @relation("AnalysisRequirementResult_analysis", fields: [analysisId], references: [id])
   requirementId    String
@@ -727,6 +731,7 @@ model DocumentReference {
   updatedAt   DateTime @updatedAt
   title       String
   provider    String
+  category    String   @default("OUTRO")
   externalId  String?
   url         String
   mimeType    String
@@ -735,10 +740,25 @@ model DocumentReference {
   entityId    String
   dataPolicy  String   @default("INSTITUTIONAL_ONLY")
   createdById String
+  fileId      String?
+  file        DocumentFile? @relation(fields: [fileId], references: [id], onDelete: SetNull)
   createdBy   User     @relation("DocumentReference_createdBy", fields: [createdById], references: [id])
 
   @@index([createdById])
   @@index([entityType, entityId])
+}
+
+model DocumentFile {
+  id               String @id
+  userId           String
+  name             String
+  mimeType         String
+  size             Int
+  data             Bytes
+  extractedText    String
+  extractionStatus String
+  createdAt        DateTime @default(now())
+  references       DocumentReference[]
 }
 
 model SystemEntry {

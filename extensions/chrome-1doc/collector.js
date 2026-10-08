@@ -4,6 +4,9 @@ globalThis.ugbCollectOneDoc = function collectOneDoc() {
   const pageUrl = new URL(location.href);
   if (pageUrl.protocol !== 'https:' || !pageUrl.hostname.endsWith('.1doc.com.br'))
     throw new Error('Abra um documento no 1Doc antes de coletar.');
+  // Signed download URLs stay in the extension's memory, outside the saved payload.
+  const downloadLinks = [];
+  globalThis.ugbOneDocDownloadLinks = () => downloadLinks;
   const clean = (value) =>
     (value || '')
       .replace(/\u00a0/g, ' ')
@@ -32,7 +35,12 @@ globalThis.ugbCollectOneDoc = function collectOneDoc() {
       if (url.protocol !== 'https:' || url.username || url.password) return '';
       url.hash = '';
       for (const key of [...url.searchParams.keys()])
-        if (/token|senha|password|session|csrf|auth/i.test(key)) url.searchParams.delete(key);
+        if (
+          /token|senha|password|session|csrf|auth|^x-amz-|^signature$|^expires$|^awsaccesskeyid$/i.test(
+            key,
+          )
+        )
+          url.searchParams.delete(key);
       return url.href;
     } catch {
       return '';
@@ -65,19 +73,24 @@ globalThis.ugbCollectOneDoc = function collectOneDoc() {
       .filter((f) => f.value);
   }
   function attachments(root) {
+    function downloadUrl(value) {
+      const url = safeUrl(value);
+      if (url) downloadLinks.push({ url, downloadUrl: new URL(value, pageUrl).href });
+      return url;
+    }
     const found = all(
       root,
       '.subemission_anexos a[href],.anexos a[href],.emissao_anexos a[href],a[download],.texto_original a[href]',
     ).map((a) => ({
       name: text(a) || a.getAttribute('download') || a.getAttribute('title') || 'Link',
-      url: safeUrl(a.getAttribute('href')),
+      url: downloadUrl(a.getAttribute('href')),
       kind: a.closest('.texto_original') ? 'link' : 'file',
       details: a.getAttribute('title') || '',
     }));
     for (const img of all(root, '.texto_original img[src],.emissao_conteudo img[src]'))
       found.push({
         name: img.getAttribute('alt') || 'Imagem do documento',
-        url: safeUrl(img.getAttribute('src')),
+        url: downloadUrl(img.getAttribute('src')),
         kind: 'image',
         details: '',
       });

@@ -1,5 +1,14 @@
 # Validação da primeira iteração
 
+## Integração das aquisições importadas · 8 de outubro de 2026
+
+- Migrações de vínculo demanda/processo, quantidade e setor pendentes, categoria documental, referências por requisito e armazenamento de arquivos aplicadas à base local, com backup prévio.
+- 59 testes Vitest aprovados: incluem revisão do descritivo com texto extraído, exibição de despachos/anexos, cópia autenticada pela extensão, falha de download com aviso e assinatura S3 somente em memória.
+- `node scripts/verify-acquisition-import.mjs`: cria e remove uma base temporária, sem fixtures na base de uso. Verifica PDF/DOCX/XLSX, cópia binária, idempotência, autorização, retenção de despachos/arquivos, revisão, proposta, análise, referências, preservação de versão e política NO_AI. Inclui API isolada com upload HTTP de 1 MB e download autenticado.
+- Processo existente sincronizado via API: uma demanda de aquisição, 11 despachos e 20 referências documentais. Cópias antigas exigem nova coleta com a extensão 1.2.
+- TypeScript, ESLint e build verificados. Interface verificada por DOM simulado; sessão autenticada do 1Doc e validação visual no navegador continuam dependentes de teste pelo usuário.
+- Auditoria de dependências: sem avisos altos/críticos; permanece um aviso moderado em `sprintf-js`, dependência do CLI de Mammoth que o Hub não executa. A extração ocorre em processo separado, com prazo e limite de heap, sem utilizar o CLI. `exceljs>uuid` foi atualizado para 11.1.1.
+
 Executada em 7 de outubro de 2026, Windows, Node 24.21, pnpm 11.19 e PostgreSQL local real.
 
 | Verificação                               | Resultado                                                                                                                                               |

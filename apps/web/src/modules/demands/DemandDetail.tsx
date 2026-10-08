@@ -15,7 +15,7 @@ function External({ url, label }: { url: unknown; label: string }) {
     </a>
   );
 }
-function CapturedData({ data }: { data: Entity }) {
+export function CapturedData({ data }: { data: Entity }) {
   return (
     <>
       {!!entities(data.fields).length && (
@@ -94,6 +94,19 @@ export function DemandDetail({ id, user }: { id: string; user: SessionUser }) {
         description={`${display(row.requester)} · ${display(row.sourceStatus)}`}
         actions={<Badge value={String(row.status)} />}
       />
+      {row.kind === 'AQUISICAO' &&
+        user.permissions.includes('acquisition.read') &&
+        object(row.acquisitionProcess).id && (
+          <section className="detail-section">
+            <h2>Processo de aquisição</h2>
+            <Link
+              className="button button-primary"
+              to={`/acquisitions/${object(row.acquisitionProcess).id}`}
+            >
+              Abrir processo, descritivo, orçamentos e análises
+            </Link>
+          </section>
+        )}
       <section className="detail-section">
         <h2>Documento original</h2>
         <p>

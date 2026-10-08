@@ -1,11 +1,34 @@
-import { Body, Controller, Delete, Get, Post, Req, Param, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Req,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { z } from 'zod';
 import { createHash, randomBytes } from 'node:crypto';
 import { AuthRequest, ExtensionAllowed, Permission } from '../auth/auth.guard';
 import { PrismaService } from '../common/prisma.service';
 import { validate } from '../common/validation';
-import { oneDocImportSchema } from './import.schema';
+import { oneDocImportSchema, type OneDocImport } from './import.schema';
 import { json } from '../resources/resource.service';
+import { canonicalDocumentUrl, syncAcquisitionDemand } from '../acquisitions/demand-bridge';
+
+function retainFiles(previous: unknown, incoming: OneDocImport['attachments']) {
+  const old = (previous as { attachments?: OneDocImport['attachments'] } | null)?.attachments ?? [];
+  return incoming.map((attachment) => {
+    const stored = old.find(
+      (a) => canonicalDocumentUrl(a.url) === canonicalDocumentUrl(attachment.url),
+    );
+    return !attachment.fileId && stored?.fileId
+      ? { ...attachment, fileId: stored.fileId, extractionStatus: stored.extractionStatus }
+      : attachment;
+  });
+}
 
 @Controller()
 export class DemandController {
@@ -80,6 +103,21 @@ export class DemandController {
   @Post('imports/1doc')
   async collect(@Body() body: unknown, @Req() req: AuthRequest) {
     const payload = validate(oneDocImportSchema, body);
+    const fileIds = [
+      ...new Set(
+        [
+          ...payload.attachments,
+          ...payload.dispatches.flatMap((dispatch) => dispatch.attachments),
+        ].flatMap((attachment) => (attachment.fileId ? [attachment.fileId] : [])),
+      ),
+    ];
+    if (
+      fileIds.length &&
+      (await this.db.documentFile.count({
+        where: { id: { in: fileIds }, userId: req.user.id },
+      })) !== fileIds.length
+    )
+      throw new BadRequestException('Um dos arquivos não pertence à sua coleta. Colete novamente.');
     const sourceUrl = new URL(payload.sourceUrl);
     sourceUrl.hash = '';
     // Keep only document routing parameters, never a page's authentication tokens.
@@ -94,6 +132,7 @@ export class DemandController {
             sourceHost_sourceId: { sourceHost: sourceUrl.hostname, sourceId: payload.sourceId },
           },
         });
+        safe.attachments = retainFiles(existing?.metadata, safe.attachments);
         const row = await tx.demand.upsert({
           where: {
             sourceHost_sourceId: { sourceHost: sourceUrl.hostname, sourceId: payload.sourceId },
@@ -126,20 +165,24 @@ export class DemandController {
           },
         });
         for (const dispatch of payload.dispatches) {
-          const previous = !dispatch.content
+          const previous = existing
             ? await tx.demandDispatch.findUnique({
                 where: {
                   demandId_sourceId: { demandId: row.id, sourceId: dispatch.sourceId },
                 },
               })
             : null;
+          dispatch.attachments = retainFiles(previous?.metadata, dispatch.attachments);
           const data = {
             sequence: dispatch.sequence,
             title: dispatch.title,
             author: dispatch.author,
             dateLabel: dispatch.dateLabel,
             content: dispatch.content || previous?.content || '',
-            metadata: previous?.content ? (previous.metadata ?? json(dispatch)) : json(dispatch),
+            metadata:
+              !dispatch.content && previous?.content
+                ? (previous.metadata ?? json(dispatch))
+                : json(dispatch),
           };
           await tx.demandDispatch.upsert({
             where: { demandId_sourceId: { demandId: row.id, sourceId: dispatch.sourceId } },
@@ -155,6 +198,7 @@ export class DemandController {
             payload: json(safe),
           },
         });
+        const process = await syncAcquisitionDemand(tx, row.id, req.user.id);
         await tx.auditLog.create({
           data: {
             userId: req.user.id,
@@ -167,6 +211,7 @@ export class DemandController {
         });
         return {
           id: row.id,
+          acquisitionId: process?.id,
           created: !existing,
           dispatches: await tx.demandDispatch.count({ where: { demandId: row.id } }),
         };

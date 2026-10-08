@@ -1219,6 +1219,49 @@ tbody tr:hover {
   margin-bottom: 22px;
   overflow: hidden;
 }
+.source-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.acquisition-review {
+  display: grid;
+  gap: 16px;
+}
+.acquisition-review label {
+  display: grid;
+  gap: 6px;
+}
+.acquisition-review textarea {
+  width: 100%;
+}
+.acquisition-requirement {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(100px, 1fr)) auto;
+  gap: 10px;
+  padding: 12px 0;
+}
+.acquisition-requirement input {
+  min-width: 0;
+  width: 100%;
+}
+.acquisition-document {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.acquisition-document summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.file-upload {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+@media (max-width: 1000px) {
+  .acquisition-requirement {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .detail-section > h2 {
   margin-bottom: 18px;
 }

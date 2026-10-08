@@ -56,7 +56,10 @@ export const catalog: Record<string, Resource> = {
       select('status', 'Situação no Hub', ['ABERTA', 'EM_ANDAMENTO', 'AGUARDANDO', 'CONCLUIDA']),
       text('notes', 'Observações internas', true),
     ],
-    include: { dispatches: { orderBy: { sequence: 'asc' } } },
+    include: {
+      dispatches: { orderBy: { sequence: 'asc' } },
+      acquisitionProcess: { select: { id: true, number: true, status: true } },
+    },
   },
   departments: {
     model: 'department',
@@ -277,7 +280,13 @@ export const catalog: Record<string, Resource> = {
       ref('departmentId', 'Setor', 'departments'),
       f('object', 'Objeto'),
       text('description', 'Descrição'),
-      select('status', 'Status', ['RECEBIDA', 'EM_ANALISE', 'ENCAMINHADA', 'CONCLUIDA']),
+      select('status', 'Status', [
+        'RECEBIDA',
+        'A_CONFERIR',
+        'EM_ANALISE',
+        'ENCAMINHADA',
+        'CONCLUIDA',
+      ]),
       ref('specificationVersionId', 'Versão do descritivo', 'specification-versions'),
       num('quantity', 'Quantidade'),
     ],
@@ -296,6 +305,7 @@ export const catalog: Record<string, Resource> = {
       f('title', 'Título'),
       ref('requestId', 'Requisição', 'requests'),
       select('status', 'Status', [
+        'A_CONFERIR',
         'EM_ANALISE',
         'AGUARDANDO_PROPOSTA',
         'AGUARDANDO_ENTREGA',
@@ -402,12 +412,26 @@ export const catalog: Record<string, Resource> = {
     fields: [
       f('title', 'Título'),
       select('provider', 'Origem', ['URL', 'INTERNAL', 'GOOGLE_DRIVE', 'GOOGLE_DOCS']),
+      {
+        ...select('category', 'Categoria do documento', [
+          'OUTRO',
+          'REQUISICAO',
+          'DESCRITIVO',
+          'ORCAMENTO',
+          'PROPOSTA',
+          'PARECER',
+          'REFERENCIA',
+        ]),
+        optional: true,
+      },
       f('externalId', 'ID externo', { optional: true }),
       f('url', 'URL', { type: 'url' }),
       f('mimeType', 'Tipo MIME'),
       text('description', 'Descrição'),
       select('entityType', 'Tipo de vínculo', [
         'demands',
+        'requests',
+        'specifications',
         'equipment',
         'maintenance',
         'knowledge',

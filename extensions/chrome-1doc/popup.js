@@ -1,6 +1,7 @@
 import { hubOrigin } from './hub-url.js';
 const get = (id) => document.getElementById(id);
 let captured;
+let downloadLinks = [];
 const status = (message) => {
   get('status').textContent = message;
 };
@@ -47,10 +48,15 @@ get('collect').addEventListener('click', async () => {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['collector.js'] });
-    const [{ result: payload }] = await chrome.scripting.executeScript({
+    const [{ result: collected }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => globalThis.ugbCollectOneDoc(),
+      func: () => {
+        const payload = globalThis.ugbCollectOneDoc();
+        return { payload, downloadLinks: globalThis.ugbOneDocDownloadLinks?.() || [] };
+      },
     });
+    const { payload } = collected;
+    downloadLinks = collected.downloadLinks;
     const result = await chrome.runtime.sendMessage({ type: 'LOOKUP_1DOC', payload });
     if (!result.ok) throw new Error(result.error);
     captured = payload;
@@ -74,10 +80,11 @@ get('save').addEventListener('click', async () => {
     const result = await chrome.runtime.sendMessage({
       type: 'IMPORT_1DOC',
       payload: { ...captured, kind: get('kind').value },
+      downloadLinks,
     });
     if (!result.ok) throw new Error(result.error);
     status(
-      `Demanda ${result.data.created ? 'salva' : 'atualizada'}. ${result.data.dispatches} despachos preservados.`,
+      `Demanda ${result.data.created ? 'salva' : 'atualizada'}. ${result.data.dispatches} despachos preservados.\n${(result.data.warnings || []).join('\n')}`,
     );
     get('save').textContent = 'Atualizar demanda';
   } catch (error) {

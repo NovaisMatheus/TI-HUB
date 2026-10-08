@@ -17,6 +17,8 @@ async function bootstrap() {
   const { AppModule } = await import('./app.module');
   const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'], bodyParser: false });
   app.use('/api/imports/1doc', expressJson({ limit: '5mb' }));
+  app.use('/api/extension/documents', expressJson({ limit: '12mb' }));
+  app.use('/api/documents/:id/upload', expressJson({ limit: '12mb' }));
   app.use(expressJson());
   app.setGlobalPrefix('api');
   app.use(helmet());

@@ -15,6 +15,24 @@ export class WorkflowService {
           offered: z.string().max(10000),
           reason: z.string().max(10000),
           equivalenceNotes: z.string().max(10000).default(''),
+          referenceUrls: z
+            .array(
+              z
+                .string()
+                .max(2048)
+                .refine((value) => {
+                  try {
+                    const url = new URL(value);
+                    return (
+                      ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password
+                    );
+                  } catch {
+                    return false;
+                  }
+                }, 'Referência deve ser uma URL http ou https válida.'),
+            )
+            .max(20)
+            .optional(),
         })
         .strict(),
       input,
