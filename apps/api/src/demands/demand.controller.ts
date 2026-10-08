@@ -17,6 +17,7 @@ import { validate } from '../common/validation';
 import { oneDocImportSchema, type OneDocImport } from './import.schema';
 import { json } from '../resources/resource.service';
 import { canonicalDocumentUrl, syncAcquisitionDemand } from '../acquisitions/demand-bridge';
+import { syncSupportDemand } from './support-bridge';
 
 function retainFiles(previous: unknown, incoming: OneDocImport['attachments']) {
   const old = (previous as { attachments?: OneDocImport['attachments'] } | null)?.attachments ?? [];
@@ -199,6 +200,7 @@ export class DemandController {
           },
         });
         const process = await syncAcquisitionDemand(tx, row.id, req.user.id);
+        const support = await syncSupportDemand(tx, row.id, req.user.id);
         await tx.auditLog.create({
           data: {
             userId: req.user.id,
@@ -212,6 +214,7 @@ export class DemandController {
         return {
           id: row.id,
           acquisitionId: process?.id,
+          supportId: support?.id,
           created: !existing,
           dispatches: await tx.demandDispatch.count({ where: { demandId: row.id } }),
         };
@@ -219,5 +222,19 @@ export class DemandController {
       { maxWait: 10000, timeout: 60000 },
     );
     return { ...result, href: `/demands/${result.id}`, warnings: payload.warnings };
+  }
+  @Permission('maintenance.write')
+  @Post('support/sync-demands')
+  async syncSupport(@Req() req: AuthRequest) {
+    const demands = await this.db.demand.findMany({
+      where: { kind: 'SUPORTE' },
+      select: { id: true },
+    });
+    for (const demand of demands)
+      await this.db.$transaction((tx) => syncSupportDemand(tx, demand.id, req.user.id), {
+        maxWait: 10000,
+        timeout: 60000,
+      });
+    return { synchronized: demands.length };
   }
 }

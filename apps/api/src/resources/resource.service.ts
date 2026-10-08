@@ -110,6 +110,27 @@ export class ResourceService {
         })
       : [];
     let related: Record<string, unknown> = {};
+    if (name === 'maintenance' && item.sourceDemandId) {
+      const source = await this.db.demand.findUniqueOrThrow({
+        where: { id: String(item.sourceDemandId) },
+        include: { dispatches: { orderBy: { sequence: 'asc' } } },
+      });
+      const actions = await this.db.maintenanceAction.findMany({
+        where: { recordId: id },
+        orderBy: { occurredAt: 'asc' },
+      });
+      related = {
+        sourceDemand: source,
+        timeline: acquisitionTimeline(
+          actions.map((action) => ({
+            ...action,
+            title: 'Registro do atendimento',
+            eventType: 'SUPPORT_UPDATED',
+          })),
+          source.dispatches,
+        ),
+      };
+    }
     if (name === 'equipment' && user.permissions.includes('maintenance.read'))
       related = {
         history: await this.db.maintenanceRecord.findMany({

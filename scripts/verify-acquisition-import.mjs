@@ -182,6 +182,65 @@ try {
     workflow = new WorkflowService(db),
     acquisitions = new AcquisitionController(db, hooks);
   const first = await demands.collect(payload, req);
+  const supportPayload = JSON.parse(
+    JSON.stringify({
+      ...payload,
+      sourceId: 'support-document',
+      number: '44/2026',
+      kind: 'SUPORTE',
+    }),
+  );
+  const support = await demands.collect(supportPayload, req);
+  assert.ok(support.supportId);
+  assert.equal(support.acquisitionId, undefined);
+  assert.equal((await demands.collect(supportPayload, req)).supportId, support.supportId);
+  const supportDetail = await resources.get('maintenance', support.supportId, user);
+  assert.equal(supportDetail.equipmentId, null);
+  assert.equal(supportDetail.sourceDemand.dispatches.length, supportPayload.dispatches.length);
+  assert.ok(supportDetail.documents.some((doc) => doc.file?.extractedText.includes('3500')));
+  assert.equal(
+    supportDetail.timeline.filter((event) => event.eventType === 'DISPATCH_PUBLISHED').length,
+    supportPayload.dispatches.length,
+  );
+  await resources.save(
+    'maintenance',
+    support.supportId,
+    {
+      status: 'AGUARDANDO',
+      diagnosis: 'Diagnostico conferido',
+      solution: 'Solucao da equipe',
+      notes: 'Aguardando retorno',
+    },
+    user,
+  );
+  assert.equal(
+    (await db.demand.findUniqueOrThrow({ where: { id: support.id } })).status,
+    'AGUARDANDO',
+  );
+  supportPayload.description = 'Texto atualizado no 1Doc';
+  supportPayload.dispatches = [];
+  await demands.collect(supportPayload, req);
+  const supportUpdated = await resources.get('maintenance', support.supportId, user);
+  assert.equal(supportUpdated.status, 'AGUARDANDO');
+  assert.equal(supportUpdated.diagnosis, 'Diagnostico conferido');
+  assert.equal(supportUpdated.solution, 'Solucao da equipe');
+  assert.equal(supportUpdated.notes, 'Aguardando retorno');
+  assert.equal(supportUpdated.sourceDemand.description, supportPayload.description);
+  assert.equal(
+    supportUpdated.sourceDemand.dispatches.length,
+    supportDetail.sourceDemand.dispatches.length,
+  );
+  await resources.save(
+    'demands',
+    support.id,
+    { status: 'EM_ANDAMENTO', notes: 'Atualizacao na demanda' },
+    user,
+  );
+  assert.equal(
+    (await db.maintenanceRecord.findUniqueOrThrow({ where: { id: support.supportId } })).status,
+    'EM_ANDAMENTO',
+  );
+  assert.equal(await db.maintenanceRecord.count({ where: { sourceDemandId: support.id } }), 1);
   console.log('Verificação: processo criado; conferindo proposta e análise.');
   assert.ok(first.acquisitionId);
   assert.equal((await demands.collect(payload, req)).acquisitionId, first.acquisitionId);
@@ -378,7 +437,10 @@ try {
       .specificationVersionId,
     reviewed.specificationVersionId,
   );
-  assert.equal(await db.demandDispatch.count(), detail.sourceDemand.dispatches.length);
+  assert.equal(
+    await db.demandDispatch.count({ where: { demandId: first.id } }),
+    detail.sourceDemand.dispatches.length,
+  );
   assert.equal(await db.documentReference.count(), count);
   const rejected = {
     ...payload,

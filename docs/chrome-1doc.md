@@ -57,3 +57,7 @@ A migration concede leitura/escrita a ADMINISTRADOR e TECNICO e somente leitura 
 `pnpm test` verifica o coletor com fixture anonimizada e DOM simulado. `pnpm test:1doc`, com API e PostgreSQL ativos, executa coletor → credencial → importação → demanda/despachos, atualização, captura parcial, retenção de observações, busca, RBAC, restrição de token e revogação. Cria somente demanda fictícia QA, sem importar os dados pessoais do HTML anexado.
 
 O HTML fornecido foi analisado sem executar seus scripts: reconheceu Chamado técnico 2.852/2026, assunto NovoServ - Usuários, dois campos adicionais preenchidos e um despacho. A extensão não foi instalada no Chrome nem testada numa sessão autenticada do 1Doc neste ambiente. A instalação manual e um teste real com **Coletar** ainda são necessários para confirmar o comportamento do Chrome e variações dinâmicas de layout. Não foi publicada na Chrome Web Store.
+
+### Demandas de suporte
+
+Ao salvar ou atualizar uma demanda classificada como Suporte, o Hub cria ou atualiza um único atendimento no módulo Suporte e intervenções. Use Abrir suporte na demanda. No atendimento, consulte Origem e despachos, Timeline e Documentos; use Editar para registrar diagnóstico, procedimento, solução e vincular um equipamento, quando identificado. Recoletar mantém esses registros técnicos e as cópias já salvas dos anexos.

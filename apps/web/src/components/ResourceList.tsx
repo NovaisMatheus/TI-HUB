@@ -58,6 +58,9 @@ export function ResourceList({
         </p>
       )}
       <div className="collection-tabs">
+        {name === 'maintenance' && catalog.demands && (
+          <Link to="/demands?kind=SUPORTE">Demandas de suporte</Link>
+        )}
         {name === 'acquisitions' && catalog.demands && (
           <Link to="/demands?kind=AQUISICAO">Demandas de aquisição</Link>
         )}

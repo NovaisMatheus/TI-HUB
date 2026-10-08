@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { SessionUser } from '@hub/types';
 import { syncAcquisitionDemand } from '../acquisitions/demand-bridge';
+import { syncSupportDemand } from '../demands/support-bridge';
 function take(data: Record<string, unknown>, names: string[]) {
   const out: Record<string, unknown> = {};
   for (const n of names) {
@@ -20,6 +21,14 @@ export class RecordHooks {
     user: SessionUser,
   ) {
     const data = { ...input };
+    if (id && name === 'maintenance') {
+      const record = await tx.maintenanceRecord.findUniqueOrThrow({
+        where: { id },
+        select: { sourceDemandId: true },
+      });
+      if (record.sourceDemandId)
+        await tx.$queryRaw`SELECT "id" FROM "Demand" WHERE "id" = ${record.sourceDemandId} FOR UPDATE`;
+    }
     if (id && name === 'requests')
       await tx.$queryRaw`SELECT "id" FROM "PurchaseProcess" WHERE "requestId" = ${id} ORDER BY "id" FOR UPDATE`;
     if (
@@ -71,7 +80,9 @@ export class RecordHooks {
           ? { upsert: { create: hardware, update: hardware } }
           : { create: hardware };
     }
-    if (['maintenance', 'analyses', 'inspections'].includes(name)) data.technicianId = user.id;
+    if (['analyses', 'inspections'].includes(name) || (name === 'maintenance' && !id))
+      data.technicianId = user.id;
+    if (name === 'maintenance' && data.equipmentId === '') data.equipmentId = null;
     if (['knowledge', 'recommendations', 'scripts'].includes(name) && !id) data.authorId = user.id;
     if (['specifications', 'requests', 'acquisitions'].includes(name) && !id)
       data.responsibleId = user.id;
@@ -321,7 +332,23 @@ export class RecordHooks {
     input: Record<string, unknown>,
     user: SessionUser,
   ) {
-    if (name === 'demands') await syncAcquisitionDemand(tx, item.id, user.id);
+    if (name === 'demands') {
+      await syncAcquisitionDemand(tx, item.id, user.id);
+      await syncSupportDemand(tx, item.id, user.id);
+    }
+    if (name === 'maintenance' && item.sourceDemandId) {
+      await tx.demand.update({
+        where: { id: String(item.sourceDemandId) },
+        data: { status: String(item.status), notes: String(item.notes ?? '') },
+      });
+      if (before)
+        await tx.maintenanceAction.create({
+          data: {
+            recordId: item.id,
+            description: `Atendimento atualizado por ${user.name}. Situação: ${item.status}.`,
+          },
+        });
+    }
     if (name === 'equipment' && before && (before as { status: string }).status !== item.status)
       await tx.equipmentStatusHistory.create({
         data: {

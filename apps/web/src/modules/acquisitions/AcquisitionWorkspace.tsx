@@ -103,7 +103,7 @@ export function AcquisitionWorkspace({
   if (sourceOnly)
     return (
       <section className="detail-section">
-        <h2>Requisição original e despachos</h2>
+        <h2>Documento original e despachos</h2>
         {source.id ? (
           <>
             <p>

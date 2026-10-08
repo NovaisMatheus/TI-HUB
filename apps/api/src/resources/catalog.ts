@@ -59,6 +59,7 @@ export const catalog: Record<string, Resource> = {
     include: {
       dispatches: { orderBy: { sequence: 'asc' } },
       acquisitionProcess: { select: { id: true, number: true, status: true } },
+      supportRecord: { select: { id: true, status: true } },
     },
   },
   departments: {
@@ -103,7 +104,7 @@ export const catalog: Record<string, Resource> = {
   },
   maintenance: {
     model: 'maintenanceRecord',
-    label: 'Intervenções',
+    label: 'Suporte e intervenções',
     singular: 'Intervenção',
     permission: 'maintenance',
     title: 'problem',
@@ -111,7 +112,7 @@ export const catalog: Record<string, Resource> = {
     columns: ['problem', 'type', 'status', 'occurredAt'],
     include: { equipment: true, technician: { select: { id: true, name: true } } },
     fields: [
-      ref('equipmentId', 'Equipamento', 'equipment'),
+      ref('equipmentId', 'Equipamento', 'equipment', true),
       select('type', 'Tipo', [
         'OCORRENCIA',
         'DIAGNOSTICO',
@@ -131,7 +132,7 @@ export const catalog: Record<string, Resource> = {
       text('solution', 'Solução', true),
       f('components', 'Componentes substituídos', { optional: true }),
       f('referral', 'Encaminhamento', { optional: true }),
-      select('status', 'Status', ['ABERTA', 'EM_ANDAMENTO', 'CONCLUIDA']),
+      select('status', 'Status', ['ABERTA', 'EM_ANDAMENTO', 'AGUARDANDO', 'CONCLUIDA']),
       text('notes', 'Observações', true),
     ],
   },

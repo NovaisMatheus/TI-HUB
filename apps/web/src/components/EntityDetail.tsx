@@ -72,13 +72,15 @@ export function EntityDetail({
     }
   }
   const title =
-    name === 'commitments'
-      ? `Empenho ${row.number}/${row.year}`
-      : name === 'analyses'
-        ? 'Análise técnica'
-        : name === 'inspections'
-          ? 'Conferência técnica'
-          : display(row[config.title]);
+    name === 'maintenance' && row.sourceDemandId
+      ? `${display(object(row.sourceDemand).documentType)} ${display(object(row.sourceDemand).number)} · ${display(object(row.sourceDemand).title)}`
+      : name === 'commitments'
+        ? `Empenho ${row.number}/${row.year}`
+        : name === 'analyses'
+          ? 'Análise técnica'
+          : name === 'inspections'
+            ? 'Conferência técnica'
+            : display(row[config.title]);
   const tabs =
     name === 'equipment'
       ? ['Resumo', 'Hardware', 'Rede', 'Histórico', 'Documentos', 'GLPI', 'Observações']
@@ -93,7 +95,9 @@ export function EntityDetail({
             'Timeline',
             'Documentos',
           ]
-        : ['Resumo', 'Documentos', ...(versions.length ? ['Versões'] : [])];
+        : name === 'maintenance' && row.sourceDemandId
+          ? ['Resumo', 'Origem e despachos', 'Timeline', 'Documentos']
+          : ['Resumo', 'Documentos', ...(versions.length ? ['Versões'] : [])];
   const createDefaults: Record<string, unknown> = {};
   if (create === 'maintenance') createDefaults.equipmentId = id;
   if (create === 'proposals') {
@@ -220,8 +224,10 @@ export function EntityDetail({
           </button>
         ))}
       </div>
-      {name === 'acquisitions' && tab === 'Timeline' ? (
+      {['acquisitions', 'maintenance'].includes(name) && tab === 'Timeline' ? (
         <AcquisitionTimeline row={row} />
+      ) : name === 'maintenance' && tab === 'Origem e despachos' ? (
+        <AcquisitionWorkspace key={`${id}-${tab}`} row={row} user={user} sourceOnly />
       ) : name === 'acquisitions' && ['Resumo', 'Origem e despachos'].includes(tab) ? (
         <AcquisitionWorkspace
           key={`${id}-${tab}`}
@@ -229,7 +235,7 @@ export function EntityDetail({
           user={user}
           sourceOnly={tab === 'Origem e despachos'}
         />
-      ) : name === 'acquisitions' && tab === 'Documentos' ? (
+      ) : ['acquisitions', 'maintenance'].includes(name) && tab === 'Documentos' ? (
         <>
           <Button
             variant="outline"

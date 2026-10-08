@@ -107,6 +107,19 @@ export function DemandDetail({ id, user }: { id: string; user: SessionUser }) {
             </Link>
           </section>
         )}
+      {row.kind === 'SUPORTE' &&
+        user.permissions.includes('maintenance.read') &&
+        object(row.supportRecord).id && (
+          <section className="detail-section">
+            <h2>Atendimento de suporte</h2>
+            <Link
+              className="button button-primary"
+              to={`/maintenance/${object(row.supportRecord).id}`}
+            >
+              Abrir suporte, diagnóstico, despachos e anexos
+            </Link>
+          </section>
+        )}
       <section className="detail-section">
         <h2>Documento original</h2>
         <p>

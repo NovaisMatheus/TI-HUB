@@ -84,3 +84,9 @@ Após nova tentativa de envio realizada pelo usuário, causa confirmada pelo Goo
 Snapshot consistente de 49 modelos e 1.033 registros salvo fora do Git antes da limpeza. Removidos 917 registros fictícios; sete contas de teste desativadas; preservados os dois documentos reais, a conta ativa de uso e a conexão Google. Seed padrão reexecutado sem repopulação. Scripts HTTP de escrita bloqueados sem habilitação explícita.
 
 47 testes aprovados; typecheck, lint, build e audit de dependências de produção concluídos. Base PostgreSQL isolada usada para validar edições parciais e concorrência real de análise/conferência, depois removida. Criados especificação funcional/técnica, manual de operação e relatório de revisão em docs. Conferência final: zero equipamentos/POPs/processos fictícios, duas demandas reais, um usuário ativo e uma conexão Google.
+
+## Demandas integradas ao suporte — 08/10/2026
+
+65 testes automatizados aprovados, typecheck, lint e build concluídos. Verificação em PostgreSQL descartável confirmou criação idempotente do atendimento, equipamento opcional, origem completa, documentos com texto extraído, timeline dos despachos, preservação de diagnóstico/solução e sincronização de situação e observações. Nenhuma massa de teste foi criada na base de uso.
+
+Oitava migration aplicada após snapshot local. Sincronização autenticada na base de uso vinculou três demandas SUPORTE a três atendimentos, exibindo quatro despachos e três referências aos documentos originais. Segunda execução confirmou ausência de duplicação. Acesso HTTP aos detalhes aprovado. Sistema reiniciado em HTTP na rede e gateway HTTPS ativo. Verificação visual em navegador real permanece não realizada.

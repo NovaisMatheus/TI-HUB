@@ -138,3 +138,7 @@ Prioridade 2: editor de múltiplos itens, OCR para anexos digitalizados, contato
 Prioridade 3: GLPI real, Google Drive/Docs com OAuth, launcher local RDP/VNC/SMB e IA externa com política de dados, citações e homologação. Hoje essas integrações permanecem mock ou referências externas; IA usa recuperação lexical, sem embeddings/OCR. Scripts não são executados pelo Hub. ICMP é opcional, manual e limitado a IPv4 privado cadastrado.
 
 Veja também [operação](operacao.md), [revisão de código](revisao-codigo.md), [arquitetura](architecture.md) e [domínio](domain.md).
+
+## Integração com suporte — 08/10/2026
+
+RF-07 e RF-12: classificação SUPORTE gera um atendimento único em /maintenance, inclusive para demandas anteriores por sincronização autenticada. Equipamento opcional; diagnóstico, procedimento e solução manuais são preservados nas recoletas. Situação e observações internas são sincronizadas nas duas telas. Origem, despachos, anexos e timeline interativa com descrição breve local ficam disponíveis no atendimento. Oitava migration: 20261008150000_support_demand_bridge.

@@ -8,6 +8,41 @@ import { DemandDetail } from '../../modules/demands/DemandDetail';
 import { api, send } from '../../services/api';
 vi.mock('../../services/api', () => ({ api: vi.fn(), send: vi.fn() }));
 afterEach(cleanup);
+it('abre o atendimento vinculado à demanda de suporte', async () => {
+  vi.mocked(api).mockResolvedValue({
+    id: 'support-demand',
+    title: 'Computador não liga',
+    documentType: 'Chamado técnico',
+    number: '44/2026',
+    kind: 'SUPORTE',
+    status: 'ABERTA',
+    metadata: {},
+    dispatches: [],
+    supportRecord: { id: 'support-case' },
+  });
+  render(
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <MemoryRouter>
+        <DemandDetail
+          id="support-demand"
+          user={{
+            id: 'user',
+            name: 'Técnico',
+            email: 'qa@example.invalid',
+            permissions: ['demands.read', 'maintenance.read'],
+          }}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  expect(
+    (
+      await screen.findByRole('link', { name: 'Abrir suporte, diagnóstico, despachos e anexos' })
+    ).getAttribute('href'),
+  ).toBe('/maintenance/support-case');
+});
 it('exibe cada despacho e salva a gestão interna sem alterar a classificação de origem', async () => {
   vi.mocked(api).mockResolvedValue({
     id: 'qa',

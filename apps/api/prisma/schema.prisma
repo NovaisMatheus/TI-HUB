@@ -103,6 +103,7 @@ model Demand {
   dispatches   DemandDispatch[]
   snapshots    DemandSnapshot[]
   acquisitionProcess PurchaseProcess?
+  supportRecord MaintenanceRecord?
   @@unique([sourceHost, sourceId])
   @@index([status])
   @@index([kind])
@@ -272,8 +273,10 @@ model MaintenanceRecord {
   notes                               String                    @default("")
   occurredAt                          DateTime                  @default(now())
   dataPolicy                          String                    @default("INSTITUTIONAL_ONLY")
-  equipmentId                         String
-  equipment                           Equipment                 @relation("MaintenanceRecord_equipment", fields: [equipmentId], references: [id])
+  equipmentId                         String?
+  equipment                           Equipment?                @relation("MaintenanceRecord_equipment", fields: [equipmentId], references: [id])
+  sourceDemandId                      String? @unique
+  sourceDemand                        Demand? @relation(fields: [sourceDemandId], references: [id], onDelete: SetNull)
   technicianId                        String
   technician                          User                      @relation("MaintenanceRecord_technician", fields: [technicianId], references: [id])
   maintenanceAction_record            MaintenanceAction[]       @relation("MaintenanceAction_record")
